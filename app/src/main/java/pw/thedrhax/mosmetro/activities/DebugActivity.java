@@ -207,10 +207,10 @@ public class DebugActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        startActivity(
-                new Intent(this, SettingsActivity.class)
-                        .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-        );
+        // Plain finish(): the system will return to whatever was below
+        // (usually the main menu). The old behavior forced
+        // SettingsActivity to the front with REORDER_TO_FRONT which
+        // could yank the user out of the current screen.
         finish();
     }
 

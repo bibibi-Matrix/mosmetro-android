@@ -71,6 +71,10 @@ public class Notify extends NotificationCompat.Builder {
              pw.thedrhax.mosmetro.R.drawable.ic_notification_connecting);
 
         priority(Util.getIntPreference(context, "pref_notify_priority", 0));
+
+        // Play the alert sound only when the notification appears first time;
+        // every progress/text update must stay silent
+        setOnlyAlertOnce(true);
     }
 
     public Notify title(String title) {
@@ -155,7 +159,8 @@ public class Notify extends NotificationCompat.Builder {
             notification.flags |= Notification.FLAG_NO_CLEAR;
         }
 
-        nm.notify(id, build()); return this;
+        nm.notify(id, notification);
+        return this;
     }
 
     public Notify hide() {
