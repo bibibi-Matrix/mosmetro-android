@@ -2,11 +2,12 @@
 
 buildscript {
     repositories {
-        // Mirrors first: direct access to dl.google.com is unreliable on this network
-        maven { url 'https://maven.aliyun.com/repository/google' }
-        maven { url 'https://maven.aliyun.com/repository/central' }
+        // Official sources first (GitHub Actions runners have direct access),
+        // Aliyun mirrors kept as fallback
         google()
         mavenCentral()
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/central' }
     }
     dependencies {
         // AGP 9.x requires Gradle 9.x
@@ -16,10 +17,10 @@ buildscript {
 
 allprojects {
     repositories {
+        google()
+        mavenCentral()
         maven { url 'https://maven.aliyun.com/repository/google' }
         maven { url 'https://maven.aliyun.com/repository/central' }
-        mavenCentral()
-        google()
         maven { url 'https://jitpack.io' }
     }
 }
