@@ -3,5 +3,17 @@
     "stats": "https://mosmetro.duckdns.org/api/v3/stats"
   },
   "news": [],
-  "branches": {}
+  "branches": {
+    "experimental": {
+      "name": "experimental",
+      "description": "Экспериментальная ветка: новые функции и исправления перед попаданием в master",
+      "version": 100001,
+      "build": 1,
+      "by_build": false,
+      "url": "https://github.com/bibibi-Matrix/mosmetro-android/releases/download/experimental/MosMetro-experimental-b1.apk",
+      "filename": "MosMetro-experimental-b1.apk",
+      "stable": false,
+      "message": "Обновление v100001\n\n* Автоматическая сборка GitHub Actions (experimental-#1)"
+    }
+  }
 }
