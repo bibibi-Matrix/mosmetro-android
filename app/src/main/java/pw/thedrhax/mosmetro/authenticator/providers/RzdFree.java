@@ -21,6 +21,7 @@ package pw.thedrhax.mosmetro.authenticator.providers;
 import android.content.Context;
 import android.content.Intent;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import org.jsoup.nodes.Document;
