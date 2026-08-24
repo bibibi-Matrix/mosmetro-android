@@ -25,6 +25,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 import pw.thedrhax.mosmetro.R;
 import pw.thedrhax.mosmetro.activities.ResearchActivity;
