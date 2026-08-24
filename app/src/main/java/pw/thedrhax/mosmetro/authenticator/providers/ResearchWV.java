@@ -19,6 +19,7 @@
 package pw.thedrhax.mosmetro.authenticator.providers;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
@@ -28,36 +29,62 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import pw.thedrhax.mosmetro.R;
+import pw.thedrhax.mosmetro.activities.ResearchActivity;
 import pw.thedrhax.mosmetro.authenticator.FinalConnectionCheckTask;
-import pw.thedrhax.mosmetro.authenticator.Gen204;
 import pw.thedrhax.mosmetro.authenticator.InitialConnectionCheckTask;
 import pw.thedrhax.mosmetro.authenticator.InterceptorTask;
 import pw.thedrhax.mosmetro.authenticator.NamedTask;
 import pw.thedrhax.mosmetro.authenticator.Provider;
 import pw.thedrhax.mosmetro.authenticator.WaitTask;
-import pw.thedrhax.mosmetro.authenticator.WebViewProvider;
 import pw.thedrhax.mosmetro.httpclient.Client;
 import pw.thedrhax.mosmetro.httpclient.HttpRequest;
 import pw.thedrhax.mosmetro.httpclient.HttpResponse;
+import pw.thedrhax.mosmetro.httpclient.clients.OkHttp;
 import pw.thedrhax.util.Logger;
-import pw.thedrhax.util.Util;
 
 /**
  * The ResearchWV class implements the authorization research mode:
  * when enabled in the debug settings, the app never tries to authorize
  * automatically. Instead, the captive portal of ANY network is opened
- * in an embedded WebView where the user completes the authorization
- * manually, while every request and response made by the portal is
- * logged for further analysis.
+ * in a visible embedded WebView where the user completes the
+ * authorization manually, while every request and response made by
+ * the portal is logged for further analysis.
  *
  * Detection: enabled by preference and any redirect present in
  * the detection response.
  *
- * @see WebViewProvider
+ * @see ResearchActivity
  */
 
-public class ResearchWV extends WebViewProvider {
+public class ResearchWV extends Provider {
     public static final String TAG = "ResearchWV";
+
+    private final InterceptorTask blocker =
+            new InterceptorTask(".*(ads\\.adfox\\.ru|mc\\.yandex\\.ru|ac\\.yandex\\.ru|top-fwz1\\.mail\\.ru|doubleclick\\.net|googlesyndication\\.com|\\.mp4$).*") {
+        @NonNull @Override
+        public HttpResponse request(Client client, HttpRequest request) throws IOException {
+            Logger.log(Logger.LEVEL.DEBUG, TAG + " | Blocked: " + request.getUrl());
+            return new HttpResponse(request, "");
+        }
+    };
+
+    private final InterceptorTask request_logger = new InterceptorTask(".*") {
+        @Nullable @Override
+        public HttpResponse request(Client client, HttpRequest request) throws IOException {
+            Logger.log(Logger.LEVEL.DEBUG,
+                    TAG + " | -> " + request.getMethod() + " " + request.getUrl());
+            return null; // pass through
+        }
+    };
+
+    private final InterceptorTask response_logger = new InterceptorTask(".*") {
+        @NonNull @Override
+        public HttpResponse response(Client client, HttpRequest request, HttpResponse response) throws IOException {
+            Logger.log(Logger.LEVEL.DEBUG, TAG + " | <- " +
+                    response.getResponseCode() + " " + request.getUrl());
+            return response;
+        }
+    };
 
     private String redirect = null;
 
@@ -71,48 +98,13 @@ public class ResearchWV extends WebViewProvider {
             @Override
             public boolean handle_response(HashMap<String, Object> vars, HttpResponse response) {
                 redirect = response.parseAnyRedirectOrNull();
-                dump(TAG, response);
+                ResearchWV.dump(TAG, response);
                 return true;
             }
         });
 
         /**
-         * Async: Block ads and trackers for speed and cleaner logs
-         */
-        add(new InterceptorTask(".*(ads\\.adfox\\.ru|mc\\.yandex\\.ru|ac\\.yandex\\.ru|top-fwz1\\.mail\\.ru|doubleclick\\.net|googlesyndication\\.com|\\.mp4$).*") {
-            @NonNull @Override
-            public HttpResponse request(Client client, HttpRequest request) throws IOException {
-                Logger.log(Logger.LEVEL.DEBUG, TAG + " | Blocked: " + request.getUrl());
-                return new HttpResponse(request, "");
-            }
-        });
-
-        /**
-         * Async: Log every request made by the portal inside WebView
-         */
-        add(new InterceptorTask(".*") {
-            @Nullable @Override
-            public HttpResponse request(Client client, HttpRequest request) throws IOException {
-                Logger.log(Logger.LEVEL.DEBUG,
-                        TAG + " | -> " + request.getMethod() + " " + request.getUrl());
-                return null; // pass through
-            }
-        });
-
-        /**
-         * Async: Log every response code
-         */
-        add(new InterceptorTask(".*") {
-            @NonNull @Override
-            public HttpResponse response(Client client, HttpRequest request, HttpResponse response) throws IOException {
-                Logger.log(Logger.LEVEL.DEBUG, TAG + " | <- " +
-                        response.getResponseCode() + " " + request.getUrl());
-                return response;
-            }
-        });
-
-        /**
-         * Opening the portal in the embedded WebView
+         * Opening the portal in a visible WebView activity
          */
         add(new NamedTask(context.getString(R.string.auth_webview_page)) {
             @Override
@@ -123,30 +115,44 @@ public class ResearchWV extends WebViewProvider {
                     return false;
                 }
 
+                // Fresh client per session: logging interceptors live here
+                Client activity_client = new OkHttp(context);
+                activity_client.interceptors.add(blocker);
+                activity_client.interceptors.add(request_logger);
+                activity_client.interceptors.add(response_logger);
+
+                ResearchWV.pending_client = activity_client;
+                ResearchWV.pending_url = redirect;
+                ResearchActivity.setState(ResearchActivity.STATE_RUNNING);
+
+                context.startActivity(new Intent(context, ResearchActivity.class)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+
                 Logger.log(context.getString(R.string.auth_research_manual));
-                wv.get(redirect);
                 return true;
             }
         });
 
         /**
-         * Waiting for manual authorization to succeed:
-         * poll generate_204 every internet_check_interval seconds
+         * Waiting for manual authorization to succeed or be cancelled
          */
         add(new WaitTask(this, context.getString(R.string.auth_research_wait)) {
-            private final int interval = Util.getIntPreference(context, "pref_internet_check_interval", 10);
-            private int counter = 0;
-
             @Override
             public boolean until(HashMap<String, Object> vars) {
-                if (++counter < interval * 10) return false;
+                if (ResearchActivity.state == ResearchActivity.STATE_CANCELLED) {
+                    Logger.log(TAG + " | Cancelled");
+                    vars.put("result", RESULT.INTERRUPTED);
+                    return true;
+                }
 
-                counter = 0;
-
-                Gen204.Gen204Result res_204 = gen_204.check(true);
-                return res_204.isConnected() && !res_204.isFalseNegative();
+                return ResearchActivity.state == ResearchActivity.STATE_CONNECTED;
             }
         }.timeout(300000));
+
+        /**
+         * Stop silently if the user cancelled the research session
+         */
+        add(vars -> !RESULT.INTERRUPTED.equals(vars.get("result")));
 
         add(new FinalConnectionCheckTask(this));
     }
