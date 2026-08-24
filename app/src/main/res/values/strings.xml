@@ -264,6 +264,7 @@
     <string name="auth_midsession_start">Attempting to bypass the midsession</string>
     <string name="vpn_warning">VPN detected! Some VPN apps or traffic filters may interfere with this app even if it was added to blacklist. Please disable the VPN and try again.</string>
     <string name="vpn_wait_disable">VPN detected. Please disable it to continueвЂ¦</string>
+    <string name="vpn_wait_title">VPN detected</string>
     <string name="vpn_reenable_reminder">Don\'t forget to enable your VPN back</string>
     <string name="error_wifi_only">Wi-Fi connection is required for authorization</string>
     <string name="error_wifi_disabled">Please enable Wi-Fi first</string>
@@ -271,6 +272,11 @@
     <string name="pref_vpn_package_summary">Package name of the VPN app which will be disabled before authorization and launched back afterwards. Root access is required for automatic mode.</string>
     <string name="auth_rzd_info">Collecting RZD_FREE portal information</string>
     <string name="auth_rzd_result">RZD_FREE: authorization algorithm is not implemented yet, collected information is written to the log</string>
+    <string name="auth_rzd_phone_send">Sending phone number</string>
+    <string name="auth_rzd_code">Entering SMS code</string>
+    <string name="auth_rzd_no_phone">Phone number for RZD_FREE is not set (Settings → Connection)</string>
+    <string name="pref_rzd_phone">RZD_FREE phone number</string>
+    <string name="pref_rzd_phone_summary">Phone number to receive the authorization code in RZD trains</string>
     <string name="auth_research_manual">The portal is opened in an embedded window. Please complete the authorization manually (phone number, SMS code, etc.) вЂ” the connection will be detected automatically and every portal action will be written to the log.</string>
     <string name="auth_research_wait">Waiting for manual authorization</string>
     <string name="pref_debug_research">Authorization research mode</string>

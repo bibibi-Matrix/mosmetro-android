@@ -242,6 +242,7 @@
     <string name="auth_midsession_start">Пытаюсь обойти midsession</string>
     <string name="vpn_warning">Обнаружен VPN! Некоторые VPN или фильтры трафика могут мешать работе приложения, даже если оно находится в списке исключений. Пожалуйста, попробуйте отключить VPN и снова запустить подключение.</string>
     <string name="vpn_wait_disable">Обнаружен VPN. Отключите его для продолжения авторизации…</string>
+    <string name="vpn_wait_title">Обнаружен VPN</string>
     <string name="vpn_reenable_reminder">Не забудьте включить VPN обратно</string>
     <string name="error_wifi_only">Для авторизации требуется подключение через Wi-Fi</string>
     <string name="error_wifi_disabled">Сначала включите Wi-Fi</string>
@@ -249,6 +250,11 @@
     <string name="pref_vpn_package_summary">Имя пакета VPN-приложения, которое будет отключено перед авторизацией и запущено обратно после подключения. Для автоматического режима требуется root.</string>
     <string name="auth_rzd_info">Сбор информации о портале RZD_FREE</string>
     <string name="auth_rzd_result">RZD_FREE: алгоритм авторизации пока не реализован, собранная информация записана в лог</string>
+    <string name="auth_rzd_phone_send">Отправка номера телефона</string>
+    <string name="auth_rzd_code">Ввод кода из СМС</string>
+    <string name="auth_rzd_no_phone">Не задан номер телефона для RZD_FREE (Настройки → Подключение)</string>
+    <string name="pref_rzd_phone">Телефон для RZD_FREE</string>
+    <string name="pref_rzd_phone_summary">Номер телефона, на который придёт код авторизации в сети РЖД (поезда, электрички)</string>
     <string name="auth_research_manual">Портал открыт во встроенном окне. Пройдите авторизацию вручную (телефон, код из СМС и т.п.) — соединение будет определено автоматически, а все действия портала записаны в лог.</string>
     <string name="auth_research_wait">Ожидание ручной авторизации</string>
     <string name="pref_debug_research">Режим исследования авторизации</string>

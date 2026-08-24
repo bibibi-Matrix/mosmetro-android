@@ -380,7 +380,8 @@ public class ConnectionService extends IntentService {
         }
 
         // Manual mode: ask user to disable the VPN
-        notify.text(getString(R.string.vpn_wait_disable))
+        notify.title(getString(R.string.vpn_wait_title))
+                .text(getString(R.string.vpn_wait_disable))
                 .progress(0, true)
                 .show();
 
