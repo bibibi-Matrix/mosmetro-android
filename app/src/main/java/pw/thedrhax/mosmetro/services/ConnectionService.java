@@ -117,6 +117,7 @@ public class ConnectionService extends IntentService {
     private boolean pref_manual_connection_monitoring;
     private boolean pref_notify_foreground;
     private boolean pref_wifi_any_ssid;
+    private boolean pref_research;
 
     // Notifications
     private Notify notify;
@@ -145,6 +146,7 @@ public class ConnectionService extends IntentService {
         pref_manual_connection_monitoring = settings.getBoolean("pref_manual_connection_monitoring", true);
         pref_internet_check_interval = Util.getIntPreference(this, "pref_internet_check_interval", 10);
         pref_wifi_any_ssid = settings.getBoolean("pref_wifi_any_ssid", false);
+        pref_research = settings.getBoolean("pref_debug_research", false);
 
         final PendingIntent stop_intent = PendingIntent.getService(
                 this, 0,
@@ -499,7 +501,7 @@ public class ConnectionService extends IntentService {
         }
 
         if (Provider.isSSIDSupported(SSID) || from_shortcut ||
-                WifiUtils.UNKNOWN_SSID.equals(SSID) || pref_wifi_any_ssid) {
+                WifiUtils.UNKNOWN_SSID.equals(SSID) || pref_wifi_any_ssid || pref_research) {
             Logger.log(this, source);
             onStart(intent, startId);
         } else {
@@ -724,7 +726,9 @@ public class ConnectionService extends IntentService {
             Logger.log(Logger.LEVEL.DEBUG, "Warning: VPN detected!");
         }
 
-        if (unknownNetwork) {
+        // In research mode every network is interesting, even if its
+        // portal does not answer the DNS probes of supported providers
+        if (unknownNetwork && !pref_research) {
             if (!Provider.dnsCheck(this)) {
                 Logger.log(this, "Stopping by dns probe (unknown network)");
                 running.set(false);

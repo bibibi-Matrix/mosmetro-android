@@ -20,6 +20,12 @@
         android:defaultValue="false" />
 
     <CheckBoxPreference
+        android:key="pref_debug_research"
+        android:title="@string/pref_debug_research"
+        android:summary="@string/pref_debug_research_summary"
+        android:defaultValue="false" />
+
+    <CheckBoxPreference
         android:key="pref_debug_stats"
         android:title="@string/pref_debug_stats"
         android:summary="@string/pref_debug_stats_summary"

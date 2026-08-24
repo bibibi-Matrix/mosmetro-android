@@ -19,6 +19,7 @@
 package pw.thedrhax.mosmetro.authenticator.providers;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -42,25 +43,25 @@ import pw.thedrhax.util.Logger;
 import pw.thedrhax.util.Util;
 
 /**
- * The RzdFreeWV class is used to research the RZD_FREE authorization
- * algorithm. The captive portal is opened in an embedded WebView where
- * the user completes the authorization manually, while every request
- * made by the portal is logged for further analysis.
+ * The ResearchWV class implements the authorization research mode:
+ * when enabled in the debug settings, the app never tries to authorize
+ * automatically. Instead, the captive portal of ANY network is opened
+ * in an embedded WebView where the user completes the authorization
+ * manually, while every request and response made by the portal is
+ * logged for further analysis.
  *
- * After the authorization succeeds (detected by generate_204 checks),
- * the collected log contains the full sequence of portal API calls
- * needed to implement the automatic algorithm.
+ * Detection: enabled by preference and any redirect present in
+ * the detection response.
  *
- * Detection: same markers as RzdFree.
- *
- * @see RzdFree
  * @see WebViewProvider
  */
 
-public class RzdFreeWV extends WebViewProvider {
+public class ResearchWV extends WebViewProvider {
+    public static final String TAG = "ResearchWV";
+
     private String redirect = null;
 
-    public RzdFreeWV(final Context context, final HttpResponse res) {
+    public ResearchWV(final Context context, final HttpResponse res) {
         super(context);
 
         /**
@@ -70,7 +71,7 @@ public class RzdFreeWV extends WebViewProvider {
             @Override
             public boolean handle_response(HashMap<String, Object> vars, HttpResponse response) {
                 redirect = response.parseAnyRedirectOrNull();
-                RzdFree.dump(response);
+                dump(TAG, response);
                 return true;
             }
         });
@@ -78,10 +79,10 @@ public class RzdFreeWV extends WebViewProvider {
         /**
          * Async: Block ads and trackers for speed and cleaner logs
          */
-        add(new InterceptorTask(".*(ads\\.adfox\\.ru|mc\\.yandex\\.ru|ac\\.yandex\\.ru|top-fwz1\\.mail\\.ru|\\.mp4$).*") {
+        add(new InterceptorTask(".*(ads\\.adfox\\.ru|mc\\.yandex\\.ru|ac\\.yandex\\.ru|top-fwz1\\.mail\\.ru|doubleclick\\.net|googlesyndication\\.com|\\.mp4$).*") {
             @NonNull @Override
             public HttpResponse request(Client client, HttpRequest request) throws IOException {
-                Logger.log(Logger.LEVEL.DEBUG, "RzdFreeWV | Blocked: " + request.getUrl());
+                Logger.log(Logger.LEVEL.DEBUG, TAG + " | Blocked: " + request.getUrl());
                 return new HttpResponse(request, "");
             }
         });
@@ -93,7 +94,7 @@ public class RzdFreeWV extends WebViewProvider {
             @Nullable @Override
             public HttpResponse request(Client client, HttpRequest request) throws IOException {
                 Logger.log(Logger.LEVEL.DEBUG,
-                        "RzdFreeWV | -> " + request.getMethod() + " " + request.getUrl());
+                        TAG + " | -> " + request.getMethod() + " " + request.getUrl());
                 return null; // pass through
             }
         });
@@ -104,7 +105,7 @@ public class RzdFreeWV extends WebViewProvider {
         add(new InterceptorTask(".*") {
             @NonNull @Override
             public HttpResponse response(Client client, HttpRequest request, HttpResponse response) throws IOException {
-                Logger.log(Logger.LEVEL.DEBUG, "RzdFreeWV | <- " +
+                Logger.log(Logger.LEVEL.DEBUG, TAG + " | <- " +
                         response.getResponseCode() + " " + request.getUrl());
                 return response;
             }
@@ -117,12 +118,12 @@ public class RzdFreeWV extends WebViewProvider {
             @Override
             public boolean run(HashMap<String, Object> vars) {
                 if (redirect == null) {
-                    Logger.log(Logger.LEVEL.DEBUG, "RzdFreeWV | No portal redirect found");
+                    Logger.log(Logger.LEVEL.DEBUG, TAG + " | No portal redirect found");
                     vars.put("result", RESULT.NOT_SUPPORTED);
                     return false;
                 }
 
-                Logger.log(context.getString(R.string.auth_rzd_manual));
+                Logger.log(context.getString(R.string.auth_research_manual));
                 wv.get(redirect);
                 return true;
             }
@@ -132,7 +133,7 @@ public class RzdFreeWV extends WebViewProvider {
          * Waiting for manual authorization to succeed:
          * poll generate_204 every internet_check_interval seconds
          */
-        add(new WaitTask(this, context.getString(R.string.auth_rzd_manual_wait)) {
+        add(new WaitTask(this, context.getString(R.string.auth_research_wait)) {
             private final int interval = Util.getIntPreference(context, "pref_internet_check_interval", 10);
             private int counter = 0;
 
@@ -151,11 +152,59 @@ public class RzdFreeWV extends WebViewProvider {
     }
 
     /**
-     * Checks if current network is supported by this Provider implementation.
-     * @param response  Instance of ParsedResponse.
-     * @return          True if response matches this Provider implementation.
+     * Checks whether the research mode is enabled and the response
+     * contains a captive portal redirect for any network.
      */
-    public static boolean match(HttpResponse response) {
-        return RzdFree.match(response);
+    public static boolean match(HttpResponse response, SharedPreferences settings) {
+        if (!settings.getBoolean("pref_debug_research", false)) return false;
+
+        return response.parseAnyRedirectOrNull() != null;
+    }
+
+    /**
+     * Logs structured information about the portal page:
+     * title, meta redirects, forms with inputs and scripts.
+     * @param tag       Prefix used to distinguish callers in the log.
+     */
+    public static void dump(String tag, HttpResponse response) {
+        Logger.log(Logger.LEVEL.DEBUG, tag + " | URL: " + response.getUrl());
+        Logger.log(Logger.LEVEL.DEBUG,
+                tag + " | Status: " + response.getResponseCode() + " " + response.getReason());
+
+        if (!response.isHtml()) {
+            Logger.log(Logger.LEVEL.DEBUG,
+                    tag + " | Content-Type: " + response.headers.getMimeType());
+            return;
+        }
+
+        org.jsoup.nodes.Document doc = response.getPageContent();
+
+        Logger.log(Logger.LEVEL.DEBUG, tag + " | Title: " + doc.title());
+
+        String redirect = response.parseAnyRedirectOrNull();
+        if (redirect != null) {
+            Logger.log(Logger.LEVEL.DEBUG, tag + " | Meta redirect: " + redirect);
+        }
+
+        for (org.jsoup.nodes.Element form : doc.getElementsByTag("form")) {
+            StringBuilder inputs = new StringBuilder();
+
+            for (org.jsoup.nodes.Element input : form.getElementsByTag("input")) {
+                if (inputs.length() > 0) inputs.append(", ");
+                inputs.append(input.attr("name"))
+                      .append("[").append(input.attr("type")).append("]");
+            }
+
+            Logger.log(Logger.LEVEL.DEBUG, tag + " | Form: "
+                    + form.attr("method") + " " + form.absUrl("action")
+                    + " {" + inputs + "}");
+        }
+
+        for (org.jsoup.nodes.Element script : doc.getElementsByTag("script")) {
+            String src = script.attr("src");
+            if (!src.isEmpty()) {
+                Logger.log(Logger.LEVEL.DEBUG, tag + " | Script: " + src);
+            }
+        }
     }
 }

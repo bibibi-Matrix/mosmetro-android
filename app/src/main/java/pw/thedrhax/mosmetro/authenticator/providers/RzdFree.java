@@ -24,9 +24,6 @@ import androidx.annotation.Nullable;
 
 import java.util.HashMap;
 
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-
 import pw.thedrhax.mosmetro.R;
 import pw.thedrhax.mosmetro.authenticator.FollowRedirectsTask;
 import pw.thedrhax.mosmetro.authenticator.InitialConnectionCheckTask;
@@ -93,45 +90,7 @@ public class RzdFree extends Provider {
      * title, meta redirects, forms with inputs and scripts.
      */
     static void dump(HttpResponse response) {
-        Logger.log(Logger.LEVEL.DEBUG, "RzdFree | URL: " + response.getUrl());
-        Logger.log(Logger.LEVEL.DEBUG,
-                "RzdFree | Status: " + response.getResponseCode() + " " + response.getReason());
-
-        if (!response.isHtml()) {
-            Logger.log(Logger.LEVEL.DEBUG,
-                    "RzdFree | Content-Type: " + response.headers.getMimeType());
-            return;
-        }
-
-        Document doc = response.getPageContent();
-
-        Logger.log(Logger.LEVEL.DEBUG, "RzdFree | Title: " + doc.title());
-
-        String redirect = response.parseAnyRedirectOrNull();
-        if (redirect != null) {
-            Logger.log(Logger.LEVEL.DEBUG, "RzdFree | Meta redirect: " + redirect);
-        }
-
-        for (Element form : doc.getElementsByTag("form")) {
-            StringBuilder inputs = new StringBuilder();
-
-            for (Element input : form.getElementsByTag("input")) {
-                if (inputs.length() > 0) inputs.append(", ");
-                inputs.append(input.attr("name"))
-                      .append("[").append(input.attr("type")).append("]");
-            }
-
-            Logger.log(Logger.LEVEL.DEBUG, "RzdFree | Form: "
-                    + form.attr("method") + " " + form.absUrl("action")
-                    + " {" + inputs + "}");
-        }
-
-        for (Element script : doc.getElementsByTag("script")) {
-            String src = script.attr("src");
-            if (!src.isEmpty()) {
-                Logger.log(Logger.LEVEL.DEBUG, "RzdFree | Script: " + src);
-            }
-        }
+        ResearchWV.dump("RzdFree", response);
     }
 
     /**
