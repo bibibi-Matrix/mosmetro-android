@@ -266,6 +266,7 @@
     <string name="vpn_wait_disable">VPN detected. Please disable it to continueвЂ¦</string>
     <string name="vpn_reenable_reminder">Don\'t forget to enable your VPN back</string>
     <string name="error_wifi_only">Wi-Fi connection is required for authorization</string>
+    <string name="error_wifi_disabled">Please enable Wi-Fi first</string>
     <string name="pref_vpn_package">VPN app package</string>
     <string name="pref_vpn_package_summary">Package name of the VPN app which will be disabled before authorization and launched back afterwards. Root access is required for automatic mode.</string>
     <string name="auth_rzd_info">Collecting RZD_FREE portal information</string>

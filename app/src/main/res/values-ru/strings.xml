@@ -244,6 +244,7 @@
     <string name="vpn_wait_disable">Обнаружен VPN. Отключите его для продолжения авторизации…</string>
     <string name="vpn_reenable_reminder">Не забудьте включить VPN обратно</string>
     <string name="error_wifi_only">Для авторизации требуется подключение через Wi-Fi</string>
+    <string name="error_wifi_disabled">Сначала включите Wi-Fi</string>
     <string name="pref_vpn_package">Пакет VPN-приложения</string>
     <string name="pref_vpn_package_summary">Имя пакета VPN-приложения, которое будет отключено перед авторизацией и запущено обратно после подключения. Для автоматического режима требуется root.</string>
     <string name="auth_rzd_info">Сбор информации о портале RZD_FREE</string>

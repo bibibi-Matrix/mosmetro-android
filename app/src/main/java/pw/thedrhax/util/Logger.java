@@ -61,8 +61,16 @@ public class Logger {
     private static long last_timestamp = 0;
 
     private static String timestamp() {
-        long diff = System.currentTimeMillis() - last_timestamp;
-        last_timestamp = System.currentTimeMillis();
+        long now = System.currentTimeMillis();
+
+        // First message of the process: nothing to differ from
+        if (last_timestamp == 0) {
+            last_timestamp = now;
+            return "[+0000]";
+        }
+
+        long diff = now - last_timestamp;
+        last_timestamp = now;
 
         if (diff >= 3600000) {
             return String.format(Locale.ENGLISH, "[+%dh%02dm%02ds]",

@@ -693,6 +693,20 @@ public class ConnectionService extends IntentService {
 
         boolean unknownNetwork = !from_shortcut && !Provider.isSSIDSupported(SSID);
 
+        // Nothing to wait for if the Wi-Fi radio is disabled completely
+        if (!wifi.isEnabled()) {
+            Logger.log(this, "Not starting: Wi-Fi is disabled");
+            notify.hide()
+                    .title(getString(R.string.notification_error))
+                    .text(getString(R.string.error_wifi_disabled))
+                    .icon(R.drawable.ic_notification_error_colored,
+                          R.drawable.ic_notification_error)
+                    .enabled(!from_debug && settings.getBoolean("pref_notify_fail", false))
+                    .id(2).locked(false).show();
+            running.set(false);
+            return;
+        }
+
         // Authorization is allowed only via Wi-Fi networks
         if (!waitForWiFi()) {
             Logger.log(this, "Stopping by network type (not Wi-Fi)");
