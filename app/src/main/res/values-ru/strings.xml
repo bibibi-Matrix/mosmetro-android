@@ -256,4 +256,6 @@
     <string name="pref_wifi_any_ssid_summary">Искать признаки поддерживаемых алгоритмов с помощью быстрой проверки через DNS в сетях Wi-Fi с незнакомым названием.</string>
     <string name="send">Отправить</string>
     <string name="share">Поделиться</string>
+    <string name="share_log_debug">Подробный лог (последние 2000 строк)</string>
+    <string name="share_log_info">Краткий лог (последние 100 строк)</string>
 </resources>

@@ -18,6 +18,7 @@
 
 package pw.thedrhax.util;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -293,24 +294,39 @@ public class Logger {
      * Log sharing routines
      */
 
-    public static Uri writeToFile(Context context) throws IOException {
-        File log_file = new File(context.getFilesDir(), "pw.thedrhax.mosmetro.txt");
+    public static Uri writeToFile(Context context, LEVEL level) throws IOException {
+        File log_file = new File(context.getFilesDir(),
+                "pw.thedrhax.mosmetro-" + level.toString().toLowerCase() + ".txt");
 
         FileWriter writer = new FileWriter(log_file);
-        writer.write(toString(Logger.LEVEL.DEBUG));
+        writer.write(toString(level));
         writer.flush(); writer.close();
 
         return FileProvider.getUriForFile(context, "pw.thedrhax.mosmetro.provider", log_file);
     }
 
-    public static void share(Context context) {
+    public static void share(final Context context) {
+        CharSequence[] items = new CharSequence[] {
+                context.getString(R.string.share_log_debug),
+                context.getString(R.string.share_log_info)
+        };
+
+        new android.app.AlertDialog.Builder(context)
+                .setTitle(context.getString(R.string.share))
+                .setItems(items, (dialog, which) -> {
+                    share(context, which == 0 ? LEVEL.DEBUG : LEVEL.INFO);
+                })
+                .show();
+    }
+
+    private static void share(Context context, LEVEL level) {
         Intent share = new Intent(Intent.ACTION_SEND).setType("text/plain")
                 .putExtra(Intent.EXTRA_SUBJECT,
                         context.getString(R.string.report_email_subject, Version.getFormattedVersion())
                 );
 
         try {
-            share.putExtra(Intent.EXTRA_STREAM, writeToFile(context));
+            share.putExtra(Intent.EXTRA_STREAM, writeToFile(context, level));
         } catch (IOException ex) {
             Logger.log(Logger.LEVEL.DEBUG, ex);
             Logger.log(context.getString(R.string.error, context.getString(R.string.error_log_file)));

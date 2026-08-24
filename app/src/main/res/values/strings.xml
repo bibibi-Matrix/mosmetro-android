@@ -278,4 +278,6 @@
     <string name="pref_wifi_any_ssid_summary">Perform quick DNS check in every unknown Wi-Fi network in attempt to find signs of any supported algorithm.</string>
     <string name="send">Send</string>
     <string name="share">Share</string>
+    <string name="share_log_debug">Detailed log (last 2000 lines)</string>
+    <string name="share_log_info">Short log (last 100 lines)</string>
 </resources>
