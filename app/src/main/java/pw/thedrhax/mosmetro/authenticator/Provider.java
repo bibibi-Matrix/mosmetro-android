@@ -38,6 +38,7 @@ import pw.thedrhax.mosmetro.authenticator.providers.MosMetroV2;
 import pw.thedrhax.mosmetro.authenticator.providers.MosMetroV2WV;
 import pw.thedrhax.mosmetro.authenticator.providers.MosMetroV3;
 import pw.thedrhax.mosmetro.authenticator.providers.RzdFree;
+import pw.thedrhax.mosmetro.authenticator.providers.RzdFreeWV;
 import pw.thedrhax.mosmetro.authenticator.providers.Unknown;
 import pw.thedrhax.mosmetro.httpclient.Client;
 import pw.thedrhax.mosmetro.httpclient.DnsClient;
@@ -150,6 +151,7 @@ public abstract class Provider extends LinkedList<Task> implements Task {
         else if (MosMetroV1.match(response)) return new MosMetroV1(context, response);
         else if (MAInet.match(response)) return new MAInet(context, response);
         else if (Bmstu.match(response)) return new Bmstu(context, response);
+        else if (RzdFreeWV.match(response)) return new RzdFreeWV(context, response);
         else if (RzdFree.match(response)) return new RzdFree(context, response);
         else return new Unknown(context, response);
     }

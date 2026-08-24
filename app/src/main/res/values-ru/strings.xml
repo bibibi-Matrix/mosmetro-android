@@ -256,6 +256,8 @@
     <string name="pref_vpn_package_summary">Имя пакета VPN-приложения, которое будет отключено перед авторизацией и запущено обратно после подключения. Для автоматического режима требуется root.</string>
     <string name="auth_rzd_info">Сбор информации о портале RZD_FREE</string>
     <string name="auth_rzd_result">RZD_FREE: алгоритм авторизации пока не реализован, собранная информация записана в лог</string>
+    <string name="auth_rzd_manual">Портал открыт во встроенном окне. Пройдите авторизацию вручную (телефон, код из СМС) — соединение будет определено автоматически, а все действия портала записаны в лог.</string>
+    <string name="auth_rzd_manual_wait">Ожидание ручной авторизации</string>
     <string name="pref_wifi_any_ssid">Проверять все сети</string>
     <string name="pref_wifi_any_ssid_summary">Искать признаки поддерживаемых алгоритмов с помощью быстрой проверки через DNS в сетях Wi-Fi с незнакомым названием.</string>
     <string name="send">Отправить</string>

@@ -92,7 +92,7 @@ public class RzdFree extends Provider {
      * Logs structured information about the portal page:
      * title, meta redirects, forms with inputs and scripts.
      */
-    private static void dump(HttpResponse response) {
+    static void dump(HttpResponse response) {
         Logger.log(Logger.LEVEL.DEBUG, "RzdFree | URL: " + response.getUrl());
         Logger.log(Logger.LEVEL.DEBUG,
                 "RzdFree | Status: " + response.getResponseCode() + " " + response.getReason());
