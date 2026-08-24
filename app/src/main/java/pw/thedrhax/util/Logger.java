@@ -82,10 +82,12 @@ public class Logger {
      */
 
     private static boolean pref_debug_logcat = false;
+    private static boolean pref_debug_research = false;
 
     public static void configure(Context context) {
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
         pref_debug_logcat = settings.getBoolean("pref_debug_logcat", false);
+        pref_debug_research = settings.getBoolean("pref_debug_research", false);
 
         for (LEVEL level : LEVEL.values()) {
             if (logs.containsKey(level)) {
@@ -93,10 +95,15 @@ public class Logger {
                 logs.remove(level);
             }
 
+            // Research mode keeps a much larger buffer: a manual portal
+            // session generates hundreds of logged lines
+            int truncate = level == LEVEL.INFO ? 100 :
+                    (pref_debug_research ? 10000 : 2000);
+
             LogWriter writer = new LogWriter(
                 context.getFilesDir(),
                 "log-" + level.toString().toLowerCase() + ".txt",
-                level == LEVEL.INFO ? 100 : 2000
+                truncate
             );
 
             logs.put(level, writer);

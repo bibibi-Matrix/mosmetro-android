@@ -55,5 +55,6 @@ public class DebugSettingsFragment extends NestedFragment {
                 getPreferenceScreen().findPreference("pref_debug_research");
 
         pref_debug_logcat.setOnPreferenceChangeListener(reload_logger);
+        pref_debug_research.setOnPreferenceChangeListener(reload_logger);
     }
 }
