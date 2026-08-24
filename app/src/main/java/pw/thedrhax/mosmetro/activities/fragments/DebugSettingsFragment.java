@@ -49,44 +49,11 @@ public class DebugSettingsFragment extends NestedFragment {
             }
         };
 
-        CheckBoxPreference pref_debug_acra = (CheckBoxPreference)
-                getPreferenceScreen().findPreference("acra.enable");
-        CheckBoxPreference pref_debug_last_log = (CheckBoxPreference)
-                getPreferenceScreen().findPreference("pref_debug_last_log");
-        CheckBoxPreference pref_debug_testing = (CheckBoxPreference)
-                getPreferenceScreen().findPreference("pref_debug_testing");
         CheckBoxPreference pref_debug_logcat = (CheckBoxPreference)
                 getPreferenceScreen().findPreference("pref_debug_logcat");
+        CheckBoxPreference pref_debug_research = (CheckBoxPreference)
+                getPreferenceScreen().findPreference("pref_debug_research");
 
-        pref_debug_last_log.setEnabled(pref_debug_acra.isChecked());
-        pref_debug_testing.setEnabled(pref_debug_last_log.isChecked());
-
-        pref_debug_acra.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
-            @Override
-            public boolean onPreferenceChange(Preference pref, Object new_value) {
-                if (!(Boolean)new_value) {
-                    pref_debug_last_log.setChecked(false);
-                    pref_debug_testing.setChecked(false);
-                    pref_debug_testing.setEnabled(false);
-                }
-
-                pref_debug_last_log.setEnabled((Boolean) new_value);
-                return true;
-            }
-        });
-
-        pref_debug_last_log.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
-            public boolean onPreferenceChange(Preference pref, Object new_value) {
-                if (!(Boolean)new_value) {
-                    pref_debug_testing.setChecked(false);
-                }
-
-                pref_debug_testing.setEnabled((Boolean) new_value);
-                return true;
-            };
-        });
-
-        pref_debug_testing.setOnPreferenceChangeListener(reload_logger);
         pref_debug_logcat.setOnPreferenceChangeListener(reload_logger);
     }
 }

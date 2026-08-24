@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Moscow Wi-Fi autologin</string>
-
-    <string name="report">Send report</string>
-    <string name="report_email_address" translatable="false">mosmetro@thedrhax.pw</string>
     <string name="report_email_subject" formatted="false">Version %s</string>
-    <string name="report_choose_client">Choose email client or messenger…</string>
+    <string name="report_choose_client">Choose email client or messengerвЂ¦</string>
 
     <string name="retry">Try again</string>
     <string name="connect">Connect</string>
@@ -48,7 +45,7 @@
         Try to reconnect to Wi-Fi network automatically when Wi-Fi signal is lost or connection is reset. (Android &lt; 10)
     </string>
     <string name="pref_wifi_bind">Bind process to the network</string>
-    <string name="pref_wifi_bind_summary">Prevents leaking traffic to mobile network or VPN. (Android ≥ 5)</string>
+    <string name="pref_wifi_bind_summary">Prevents leaking traffic to mobile network or VPN. (Android в‰Ґ 5)</string>
 
     <string name="pref_internet_check">Connection monitoring</string>
     <string name="pref_internet_check_summary">Check Internet connection every 10 seconds and restart connection on error.</string>
@@ -117,13 +114,13 @@
 
     <string name="auth_connecting" formatted="false">Connecting to %s</string>
     <string name="algorithm_name" formatted="false">Algorithm name: %s</string>
-    <string name="auth_waiting">Waiting…</string>
+    <string name="auth_waiting">WaitingвЂ¦</string>
     <string name="auth_checking_connection">Checking Internet connection</string>
     <string name="auth_already_connected">Already connected</string>
     <string name="auth_init">Initializing auth procedure</string>
     <string name="auth_check">Checking auth status</string>
     <string name="auth_finish">Finishing auth procedure</string>
-    <string name="auth_unknown_redirect">Unknown redirect. Trying to detect algorithm…</string>
+    <string name="auth_unknown_redirect">Unknown redirect. Trying to detect algorithmвЂ¦</string>
     <string name="auth_algorithm_switch">Switching to another algorithm: %s (this is not an error)</string>
     <string name="auth_redirect">Getting redirection</string>
     <string name="auth_auth_page">Getting login page</string>
@@ -159,9 +156,9 @@
     <string name="notification_error">Unable to connect</string>
     <string name="notification_error_log">Click to get details or retry</string>
     <string name="notification_unsupported">Network is not supported</string>
-    <string name="notification_progress_waiting">Waiting…</string>
+    <string name="notification_progress_waiting">WaitingвЂ¦</string>
 
-    <string name="ip_wait">Waiting for IP address…</string>
+    <string name="ip_wait">Waiting for IP addressвЂ¦</string>
     <string name="ip_wait_result" formatted="false">IP address%s assigned within %d seconds</string>
 
     <string name="contirutor_revertron" translatable="false">Revertron</string>
@@ -187,7 +184,7 @@
     <string name="receiver_auto_connect">Auto connect</string>
     <string name="more_information">More information</string>
     <string name="more_information_summary">Links, communities, contibutors</string>
-    <string name="auth_provider_check">Detecting the provider…</string>
+    <string name="auth_provider_check">Detecting the providerвЂ¦</string>
     <string name="stop">Stop</string>
     <string name="pref_notify_foreground">Foreground process</string>
     <string name="pref_notify_foreground_summary">Bind background process to notification to protect it from being killed. If you disable this option, background process will be killed even if you simply open and close the app window.</string>
@@ -217,20 +214,16 @@
     <string name="manual_connection_shortcut_summary">Start manual connection directly from launcher</string>
     <string name="pref_debug_logcat">System log</string>
     <string name="pref_debug_logcat_summary">Write log messages to system log to allow debugging in case of crash.</string>
-    <string name="pref_debug_acra">Crash reports</string>
-    <string name="pref_debug_acra_summary">Automatically send crash reports to application developer.</string>
     <string name="pref_updater_branch_stable">Main branches</string>
     <string name="pref_updater_branch_experimental">Experimental branches</string>
     <string name="pref_debug">Debug options</string>
-    <string name="pref_debug_summary">Automatic reports, LogCat, etc.</string>
+    <string name="pref_debug_summary">LogCat, research mode</string>
     <string name="pref_mosmetro_v3" translatable="false">MosMetroV3 (welcome.wi-fi.ru)</string>
     <string name="pref_mosmetro_v3_summary">This algorithm was used during the 2018 FIFA World Cup in Moscow and St. Petersburg. It is currently disabled, so most likely this setting will not affect anything.</string>
     <string name="pref_mainet" translatable="false">MAInet (wifi.mai.ru)</string>
-    <string name="pref_mainet_summary">This algorithm is required to connect to MAInet_public — public Wi-Fi network of Moscow Aviation Institute</string>
+    <string name="pref_mainet_summary">This algorithm is required to connect to MAInet_public вЂ” public Wi-Fi network of Moscow Aviation Institute</string>
     <string name="pref_bmstu" translatable="false">bmstu_lb (lbpfs.bmstu.ru)</string>
-    <string name="pref_bmstu_summary">This algorithm is required to connect to bmstu_lb — public Wi-Fi network of Bauman Moscow State Technical University.</string>
-    <string name="pref_debug_last_log">Send the last log</string>
-    <string name="pref_debug_last_log_summary">Log will be sent along with Sentry reports in case of crash.</string>
+    <string name="pref_bmstu_summary">This algorithm is required to connect to bmstu_lb вЂ” public Wi-Fi network of Bauman Moscow State Technical University.</string>
     <string name="location_permission">Location permission</string>
     <string name="location_permission_saving">Android 9+ requires location access in order to get the name of the Wi-Fi network. Without this permission app will not start automatically, but you can still connect manually through main menu or shortcuts.</string>
     <string name="log_wipe_confirmation">Clear log file?</string>
@@ -242,8 +235,6 @@
     <string name="auth_webview_script">Waiting for script</string>
     <string name="pref_internet_midsession">Handle midsession</string>
     <string name="pref_internet_midsession_summary">If you are seeing \"Sign into Wi-Fi network\" in your notifications, or Android thinks that internet is not available even if it actually is, this option might help.</string>
-    <string name="pref_debug_testing">Participation in testing</string>
-    <string name="pref_debug_testing_summary">Send conditional automated reports. Conditions change in every update and are targeting new functions and fixes. Reports contain last log, app version and some information about system and device.</string>
     <string name="receiver_service_title">Waiting for Wi-Fi connection</string>
     <string name="reveiver_service_summary">Tap here to open settings</string>
     <string name="pref_autoconnect_service_title">Persistent service</string>
@@ -272,22 +263,19 @@
     <string name="auth_midsession_fail">Unable to handle midsession. If you see this message too often, tap &gt;here&lt; to disable this function.</string>
     <string name="auth_midsession_start">Attempting to bypass the midsession</string>
     <string name="vpn_warning">VPN detected! Some VPN apps or traffic filters may interfere with this app even if it was added to blacklist. Please disable the VPN and try again.</string>
-    <string name="vpn_wait_disable">VPN detected. Please disable it to continue…</string>
+    <string name="vpn_wait_disable">VPN detected. Please disable it to continueвЂ¦</string>
     <string name="vpn_reenable_reminder">Don\'t forget to enable your VPN back</string>
     <string name="error_wifi_only">Wi-Fi connection is required for authorization</string>
     <string name="pref_vpn_package">VPN app package</string>
     <string name="pref_vpn_package_summary">Package name of the VPN app which will be disabled before authorization and launched back afterwards. Root access is required for automatic mode.</string>
     <string name="auth_rzd_info">Collecting RZD_FREE portal information</string>
     <string name="auth_rzd_result">RZD_FREE: authorization algorithm is not implemented yet, collected information is written to the log</string>
-    <string name="auth_research_manual">The portal is opened in an embedded window. Please complete the authorization manually (phone number, SMS code, etc.) — the connection will be detected automatically and every portal action will be written to the log.</string>
+    <string name="auth_research_manual">The portal is opened in an embedded window. Please complete the authorization manually (phone number, SMS code, etc.) вЂ” the connection will be detected automatically and every portal action will be written to the log.</string>
     <string name="auth_research_wait">Waiting for manual authorization</string>
     <string name="pref_debug_research">Authorization research mode</string>
     <string name="pref_debug_research_summary">Do not authorize automatically in any network. Instead, open the captive portal of any Wi-Fi network in an embedded window and record the whole authorization process to the log.</string>
     <string name="pref_wifi_any_ssid">Check every network</string>
     <string name="pref_wifi_any_ssid_summary">Perform quick DNS check in every unknown Wi-Fi network in attempt to find signs of any supported algorithm.</string>
     <string name="send">Send</string>
-    <string name="feedback_description">Problem description (not required)</string>
     <string name="share">Share</string>
-    <string name="pref_debug_stats">Participation in statistics</string>
-    <string name="pref_debug_stats_summary">App will collect anonymous metrics about connections. In addition to fully internal metrics (app version, algorithm, etc.) reports may include OS version and the name of the Wi-Fi network.</string>
 </resources>

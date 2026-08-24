@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-import io.sentry.Sentry;
 import pw.thedrhax.mosmetro.R;
 import pw.thedrhax.mosmetro.authenticator.providers.MAInet;
 import pw.thedrhax.mosmetro.authenticator.providers.Bmstu;
@@ -321,7 +320,6 @@ public abstract class Provider extends LinkedList<Task> implements Task {
                 Logger.log(context.getString(R.string.error,
                         context.getString(R.string.auth_error_fatal)
                 ));
-                Sentry.captureException(ex);
                 break;
             }
         }

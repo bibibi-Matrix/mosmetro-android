@@ -50,7 +50,6 @@ import android.widget.Toast;
 
 import java.util.Map;
 
-import io.sentry.Sentry;
 import pw.thedrhax.mosmetro.R;
 import pw.thedrhax.mosmetro.activities.fragments.AboutFragment;
 import pw.thedrhax.mosmetro.activities.fragments.BranchFragment;
@@ -338,7 +337,7 @@ public class SettingsActivity extends Activity {
                     .addToBackStack(id)
                     .commit();
         } catch (IllegalStateException ex) { // https://stackoverflow.com/q/7575921
-            Sentry.captureException(ex);
+            Logger.log(Logger.LEVEL.DEBUG, ex);
         }
     }
 

@@ -19,21 +19,11 @@
 package pw.thedrhax.mosmetro;
 
 import android.app.Application;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
-
-import io.sentry.Attachment;
-import io.sentry.Sentry;
-import io.sentry.android.core.SentryAndroid;
-import io.sentry.protocol.User;
-import pw.thedrhax.mosmetro.services.BackendWorker;
-import pw.thedrhax.util.Logger;
-import pw.thedrhax.util.UUID;
-import pw.thedrhax.util.Version;
 
 import com.topjohnwu.superuser.Shell;
 
-import java.util.List;
+import pw.thedrhax.mosmetro.services.BackendWorker;
+import pw.thedrhax.util.Logger;
 
 public class MosMetroApp extends Application {
     static {
@@ -46,41 +36,5 @@ public class MosMetroApp extends Application {
         super.onCreate();
         Logger.configure(this);
         BackendWorker.configure(this);
-
-        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-
-        SentryAndroid.init(this, options -> {
-            options.setDsn("https://13509f0e75f74081845cfe990b9840f3@o1176364.ingest.sentry.io/4504074406199296");
-            options.setEnableAutoSessionTracking(false);
-            options.setRelease(Version.getFormattedVersion());
-            options.setTag("branch", Version.getBranch());
-            options.setTag("build", "" + Version.getBuildNumber());
-
-            options.setBeforeSend((event, hint) -> {
-                boolean manual = "true".equals(event.getTag("manual"));
-
-                if (!manual && !settings.getBoolean("acra.enable", true)) {
-                    return null;
-                }
-
-                if (manual || settings.getBoolean("pref_debug_last_log", true)) {
-                    StringBuilder cropped_log = new StringBuilder();
-                    List<CharSequence> full_log = Logger.read(Logger.LEVEL.DEBUG);
-                    int cut = full_log.lastIndexOf(Logger.CUT);
-
-                    for (CharSequence line : full_log.subList(cut + 1, full_log.size())) {
-                        cropped_log.append(line).append('\n');
-                    }
-
-                    hint.addAttachment(new Attachment(cropped_log.toString().getBytes(), "log-debug.txt"));
-                }
-
-                return event;
-            });
-        });
-
-        User user = new User();
-        user.setId(UUID.get(this));
-        Sentry.setUser(user);
     }
 }

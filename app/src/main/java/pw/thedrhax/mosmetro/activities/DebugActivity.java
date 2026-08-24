@@ -164,10 +164,7 @@ public class DebugActivity extends Activity {
         // R.id values are not compile-time constants anymore (AGP 9)
         int id = item.getItemId();
 
-        if (id == R.id.action_report) {
-            startActivity(new Intent(this, FeedbackActivity.class));
-            return true;
-        } else if (id == R.id.action_share) {
+        if (id == R.id.action_share) {
             SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 
             if (!settings.getBoolean("pref_share_warning", false)) {

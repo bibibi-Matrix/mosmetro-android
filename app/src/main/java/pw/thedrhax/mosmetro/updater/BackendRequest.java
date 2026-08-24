@@ -31,18 +31,12 @@ import com.jayway.jsonpath.DocumentContext;
 
 import net.minidev.json.JSONArray;
 
-import org.json.simple.JSONObject;
-
 import pw.thedrhax.mosmetro.BuildConfig;
 import pw.thedrhax.mosmetro.R;
 import pw.thedrhax.mosmetro.activities.SafeViewActivity;
 import pw.thedrhax.mosmetro.activities.SettingsActivity;
-import pw.thedrhax.mosmetro.authenticator.ProviderMetrics;
 import pw.thedrhax.mosmetro.httpclient.Client;
-import pw.thedrhax.mosmetro.httpclient.HttpResponse;
-import pw.thedrhax.mosmetro.httpclient.clients.OkHttp;
 import pw.thedrhax.util.Notify;
-import pw.thedrhax.util.UUID;
 import pw.thedrhax.util.Util;
 
 public class BackendRequest {
@@ -178,51 +172,8 @@ public class BackendRequest {
         return ts - last_ts;
     }
 
-    @SuppressWarnings("unchecked")
-    private void sendMetrics() {
-        DocumentContext data = getCachedData(true);
-        org.json.simple.JSONArray queue = ProviderMetrics.getQueue(settings);
-
-        if (queue.size() == 0) {
-            return;
-        }
-
-        JSONObject body = new JSONObject();
-        body.put("uuid", UUID.get(context));
-        body.put("events", queue);
-
-        String url;
-
-        try {
-            url = data.read("$.urls.stats");
-        } catch (ClassCastException ex) {
-            url = null;
-        }
-
-        if (url == null) {
-            url = BuildConfig.API_URL_STATS;
-        }
-
-        HttpResponse res;
-
-        try {
-            res = client.post(url, body.toJSONString(), "application/json").execute();
-        } catch (IOException ex) {
-            return;
-        }
-
-        if (res.getResponseCode() == 200) {
-            queue.clear();
-            ProviderMetrics.saveQueue(settings, queue);
-        }
-    }
-
     public boolean run() {
         DocumentContext data = getData(false);
-
-        if (settings.getBoolean("pref_debug_stats", true)) {
-            sendMetrics();
-        }
 
         if (data == Util.JSONPATH_EMPTY) {
             return false;

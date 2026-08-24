@@ -34,7 +34,6 @@
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
 
 	    <meta-data android:name="android.max_aspect" android:value="2.1" />
-        <meta-data android:name="io.sentry.auto-init" android:value="false" />
 
         <!-- Main Activities -->
 
@@ -103,17 +102,6 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="pw.thedrhax.mosmetro.activities.ShortcutActivity" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".activities.FeedbackActivity"
-            android:exported="true"
-            android:label="@string/report"
-            android:theme="@style/AppBaseTheme.Dialog">
-            <intent-filter>
-                <action android:name="pw.thedrhax.mosmetro.activities.FeedbackActivity" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>

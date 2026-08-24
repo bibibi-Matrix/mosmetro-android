@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Wi-Fi в метро</string>
-
-    <string name="report">Отправить отчет</string>
     <string name="report_email_subject" formatted="false">Версия %s</string>
     <string name="report_choose_client">Выберите E-mail клиент или мессенджер…</string>
 
@@ -199,20 +197,16 @@
     <string name="manual_connection_shortcut_summary">Запускайте ручное подключение прямо с рабочего стола</string>
     <string name="pref_debug_logcat">Системный лог</string>
     <string name="pref_debug_logcat_summary">Записывать сообщения в системный лог для отладки в случае аварийного завершения.</string>
-    <string name="pref_debug_acra">Отчёты о сбоях</string>
-    <string name="pref_debug_acra_summary">Автоматически отправлять отчёты о сбоях разработчику приложения.</string>
     <string name="pref_updater_branch_stable">Основные ветки</string>
     <string name="pref_updater_branch_experimental">Экспериментальные ветки</string>
     <string name="pref_debug">Отладка</string>
-    <string name="pref_debug_summary">Автоматические отчёты, LogCat, и т.д.</string>
+    <string name="pref_debug_summary">LogCat, research mode</string>
     <string name="pref_mosmetro_v3_summary">Этот алгоритм использовался во время ЧМ 2018 по футболу в Москве и Санкт-Петербурге. В данный момент он отключён, так что, скорее всего, эта настройка ни на что не повлияет.</string>
     <string name="pref_mosmetro_v2_wv">MosMetroV2WV (бета)</string>
     <string name="pref_mosmetro_v2_wv_summary">Расширение алгоритма MosMetroV2, использующее браузер в фоновом режиме вместо заранее заданных HTTP запросов. Медленнее, но безопаснее, если провайдер снова начнёт принимать меры против пользователей данного приложения.</string>
     <string name="pref_mosmetro_v2_wv_warning">Данный алгоритм работает менее стабильно, чем MosMetroV2. Он может зависать, вылетать или просто медленно подключаться. Вы действительно хотите его включить?</string>
     <string name="pref_mainet_summary">Этот алгоритм используется для авторизации в сети MAInet_public Московского авиационного института.</string>
     <string name="pref_bmstu_summary">Этот алгоритм используется для авторизации в сети bmstu_lb МГТУ им. Н. Э. Баумана</string>
-    <string name="pref_debug_last_log">Отправлять последний лог</string>
-    <string name="pref_debug_last_log_summary">Лог будет отправляться вместе с отчетами Sentry в случае сбоя.</string>
     <string name="location_permission">Определение местоположения</string>
     <string name="location_permission_saving">Чтобы приложение могло узнать название сети Wi-Fi, Android 9+ требует доступ к местоположению. Без этого разрешения приложение не сможет подключаться автоматически, но вы по-прежнему сможете использовать ручное подключение в главном меню или через ярлыки.</string>
     <string name="log_wipe_confirmation">Очистить файл лога?</string>
@@ -221,8 +215,6 @@
     <string name="auth_webview_script">Ожидание завершения скрипта</string>
     <string name="pref_internet_midsession">Обработка midsession</string>
     <string name="pref_internet_midsession_summary">Если у вас появляется уведомление \"Требуется вход в сеть\" или Android считает, что доступа в интернет нет, когда он на самом деле есть, то эта опция может помочь.</string>
-    <string name="pref_debug_testing">Участие в тестировании</string>
-    <string name="pref_debug_testing_summary">Автоматически отправлять отчёты при определённых условиях. Условия меняются в каждом обновлении и направлены на проверку работы новых функций. Отчёт содержит последний лог, версию приложения и некоторую информацию о системе и устройстве.</string>
     <string name="receiver_service_title">Ожидание подключения к сети Wi-Fi</string>
     <string name="reveiver_service_summary">Нажмите сюда, чтобы открыть настройки</string>
     <string name="pref_autoconnect_service_title">Постоянный фоновый процесс</string>
@@ -263,8 +255,5 @@
     <string name="pref_wifi_any_ssid">Проверять все сети</string>
     <string name="pref_wifi_any_ssid_summary">Искать признаки поддерживаемых алгоритмов с помощью быстрой проверки через DNS в сетях Wi-Fi с незнакомым названием.</string>
     <string name="send">Отправить</string>
-    <string name="feedback_description">Описание проблемы (не обязательно)</string>
     <string name="share">Поделиться</string>
-    <string name="pref_debug_stats">Участие в статистике</string>
-    <string name="pref_debug_stats_summary">Приложение будет собирать анонимную статистику о подключениях. Кроме внутренних метрик (версия, алгоритм и т.д.), в отчёты включаются название сети Wi-Fi и версия Android.</string>
 </resources>
