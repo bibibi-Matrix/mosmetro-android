@@ -30,6 +30,7 @@ import java.util.HashMap;
 import pw.thedrhax.mosmetro.R;
 import pw.thedrhax.mosmetro.activities.ResearchActivity;
 import pw.thedrhax.mosmetro.authenticator.FinalConnectionCheckTask;
+import pw.thedrhax.mosmetro.authenticator.Gen204;
 import pw.thedrhax.mosmetro.authenticator.InitialConnectionCheckTask;
 import pw.thedrhax.mosmetro.authenticator.InterceptorTask;
 import pw.thedrhax.mosmetro.authenticator.NamedTask;
