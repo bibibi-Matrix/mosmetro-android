@@ -19,6 +19,8 @@
 package pw.thedrhax.mosmetro.authenticator;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.LinkedList;
 
 import android.content.Context;
 
@@ -66,6 +68,14 @@ public class Gen204 {
     private final Client client;
     private final Randomizer random;
 
+    /**
+     * Endpoints which are permanently blocked by the network while
+     * the Internet connection is actually working (e.g. server-side
+     * 403 for a single generate_204 host). Skipped during rotation
+     * until the end of this Gen204 instance (service session).
+     */
+    private final HashSet<String> blocked_hosts = new HashSet<>();
+
     private Gen204Result last_result = null;
 
     public Gen204(Context context, Listener<Boolean> running) {
@@ -83,8 +93,20 @@ public class Gen204 {
      */
     @Nullable
     private HttpResponse request(String schema, String[] urls) {
+        LinkedList<String> available = new LinkedList<>();
+        for (String url : urls) {
+            if (!blocked_hosts.contains(schema + "://" + url)) {
+                available.add(url);
+            }
+        }
+
+        if (available.isEmpty()) {
+            Logger.log(this, "All endpoints are blacklisted, skipping request");
+            return null;
+        }
+
         for (int i = 0; i < 3; i++) {
-            String url = schema + "://" + random.choose(urls);
+            String url = schema + "://" + random.choose(available);
 
             try {
                 HttpResponse res = client.get(url).execute();
@@ -131,8 +153,14 @@ public class Gen204 {
         } else {
             Gen204Result res = new Gen204Result(rel, unrel);
 
-            if (res.isFalseNegative() && (last_result == null || !last_result.isFalseNegative())) {
-                Logger.log(this, "False negative detected");
+            if (res.isFalseNegative()) {
+                if (last_result == null || !last_result.isFalseNegative()) {
+                    Logger.log(this, "False negative detected");
+                }
+
+                // Reliable endpoint confirmed the Internet connection,
+                // so the failing endpoint is blocked by the network itself
+                blacklist(res.getFalseNegative());
             }
 
             return res; // positive with possible false negative
@@ -196,6 +224,7 @@ public class Gen204 {
      */
     public boolean confirmFalseNegative(@Nullable HttpResponse false_negative) {
         boolean checked = false;
+        boolean single_blocked = true;
 
         for (int i = 0; i < 3; i++) {
             String url = "http://" + random.choose(URL_DEFAULT);
@@ -208,14 +237,35 @@ public class Gen204 {
                 Logger.log(this, url + " | " + res.getResponseCode());
                 checked = true;
 
-                if (res.getResponseCode() != 204) return true;
+                if (res.getResponseCode() != 204) {
+                    // Another endpoint fails too: this is a real midsession,
+                    // no endpoint must be blacklisted
+                    single_blocked = false;
+                    break;
+                }
             } catch (IOException ex) {
                 Logger.log(this, url + " | " + ex);
             }
         }
 
         // No other endpoint was checked: assume the old behavior
-        return !checked;
+        if (!checked || single_blocked && checked) {
+            blacklist(false_negative);
+            return !checked;
+        }
+
+        return true;
+    }
+
+    /**
+     * Adds the endpoint to the blacklist until the end of the session.
+     */
+    private void blacklist(@Nullable HttpResponse response) {
+        if (response == null) return;
+
+        String url = response.getRequest().getUrl();
+        blocked_hosts.add(url);
+        Logger.log(this, "Blacklisted blocked endpoint: " + url);
     }
 
     public class Gen204Result {

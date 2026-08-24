@@ -243,7 +243,7 @@ public class MosMetroV2 extends Provider {
                         DocumentContext json = response.jsonpath();
                         json.delete("$.data.segmentParams.auth");
                         json.delete("$.data.userParams");
-                        Logger.log(Logger.LEVEL.DEBUG, json.jsonString());
+                        Logger.log(Logger.LEVEL.DEBUG, HttpResponse.maskBody(json.jsonString()));
 
                         String afterAuth = json.read("$.data.segmentParams.common.redirectUrl.afterAuth");
                         try {
@@ -383,6 +383,21 @@ public class MosMetroV2 extends Provider {
 
                 return true;
             }
+        });
+
+        /**
+         * Checking Internet connection right after the authorization.
+         * If it already works, following post-auth redirects (usually
+         * marketing pages) is pointless and only wastes time.
+         */
+        add(vars -> {
+            if (gen_204.check(true).isConnected()) {
+                Logger.log(Logger.LEVEL.DEBUG,
+                        "Internet works, skipping post-auth redirects");
+                vars.put("post_auth_redirect", null);
+            }
+
+            return true;
         });
 
         add(new FollowRedirectsTask(this) {

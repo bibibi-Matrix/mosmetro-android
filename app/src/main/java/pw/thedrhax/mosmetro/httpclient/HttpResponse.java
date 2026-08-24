@@ -333,18 +333,34 @@ public class HttpResponse {
     public String toBodyString() {
         if (document != null) {
             String html = document.outerHtml();
-            if (html.length() <= 2000) {
-                return html;
-            } else {
+
+            // Error pages are dumped completely for easier debugging
+            if (html.length() > 2000 && code < 400) {
                 return "<!-- file is too long -->";
             }
+            return maskBody(html);
         } else {
             try {
-                return json().toJSONString();
+                return maskBody(json().toJSONString());
             } catch (org.json.simple.parser.ParseException ignored) {}
         }
 
         return "<!-- format not supported -->";
+    }
+
+    private static final Pattern MAC_ADDRESS =
+            Pattern.compile("([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}");
+    private static final Pattern SENSITIVE_JSON_FIELDS = Pattern.compile(
+            "(\"(?:client_ip|user_mac|mac|ip)\"\\s*:\\s*\")[^\"]*(\")");
+
+    /**
+     * Masks hardware addresses and client IP fields inside response
+     * bodies to keep them out of shared logs.
+     */
+    public static String maskBody(String body) {
+        body = MAC_ADDRESS.matcher(body).replaceAll("xx-xx-xx-xx-xx-xx");
+        body = SENSITIVE_JSON_FIELDS.matcher(body).replaceFirst("$1<hidden>$2");
+        return body;
     }
 
     public String toString() {

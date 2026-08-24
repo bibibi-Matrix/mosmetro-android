@@ -65,8 +65,12 @@ public class Logger {
         long diff = System.currentTimeMillis() - last_timestamp;
         last_timestamp = System.currentTimeMillis();
 
-        if (diff > 99000) {
-            return "[+>99s]";
+        if (diff >= 3600000) {
+            return String.format(Locale.ENGLISH, "[+%dh%02dm%02ds]",
+                    diff / 3600000, diff % 3600000 / 60000, diff % 60000 / 1000);
+        } else if (diff >= 60000) {
+            return String.format(Locale.ENGLISH, "[+%dm%02ds]",
+                    diff / 60000, diff % 60000 / 1000);
         } else if (diff > 9999) {
             return String.format(Locale.ENGLISH, "[+%03ds]", diff / 1000);
         } else {

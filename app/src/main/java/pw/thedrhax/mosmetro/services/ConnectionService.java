@@ -28,6 +28,7 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.os.Build;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.text.SpannableString;
 import android.text.Spanned;
@@ -72,6 +73,14 @@ public class ConnectionService extends IntentService {
     private static final ReentrantLock lock = new ReentrantLock();
     private static final Listener<Boolean> running = new Listener<>(false);
     private static String SSID = WifiUtils.UNKNOWN_SSID;
+
+    // Debounce of quick restarts (e.g. Wi-Fi off/on bursts in trains)
+    private static final long RESTART_DEBOUNCE_MS = 2000;
+    private static long last_stop_time = -RESTART_DEBOUNCE_MS;
+    private static String last_stop_ssid = WifiUtils.UNKNOWN_SSID;
+    private static Provider.RESULT last_stop_result = Provider.RESULT.INTERRUPTED;
+    private Provider.RESULT last_result = Provider.RESULT.INTERRUPTED;
+
     private boolean from_shortcut = false;
     private boolean from_debug = false;
 
@@ -88,6 +97,9 @@ public class ConnectionService extends IntentService {
     private static final int VPN_MODE_ROOT = 1;   // disabled via root, must be launched back
     private static final int VPN_MODE_MANUAL = 2; // disabled manually by user
     private int vpn_mode = VPN_MODE_NONE;
+
+    // Watchdog for waitForIP() when the user-defined timeout is disabled
+    private static final int IP_WAIT_WATCHDOG = 15 * 60; // seconds
 
     // Preferences
     private WifiUtils wifi;
@@ -279,12 +291,28 @@ public class ConnectionService extends IntentService {
         while (wifi.getIP() == 0 || wifi.getDns().isEmpty()) {
             if (!running.sleep(1000)) return false;
 
-            if (pref_ip_wait != 0 && count++ == pref_ip_wait) {
+            count++;
+
+            // User-defined timeout
+            if (pref_ip_wait != 0 && count == pref_ip_wait) {
                 Logger.log(getString(R.string.error,
                         getString(R.string.ip_wait_result,
                             " " + getString(R.string.not), pref_ip_wait
                         )
                 ));
+                return false;
+            }
+
+            // Watchdog: never wait forever, even if the user-defined
+            // timeout is disabled (the default), otherwise the service
+            // may hang for hours waiting for an IP which never arrives
+            if (pref_ip_wait == 0 && count == IP_WAIT_WATCHDOG) {
+                Logger.log(getString(R.string.error,
+                        getString(R.string.ip_wait_result,
+                            " " + getString(R.string.not), IP_WAIT_WATCHDOG
+                        )
+                ));
+                Logger.log(this, "Watchdog: restarting the connection sequence");
                 return false;
             }
         }
@@ -445,6 +473,17 @@ public class ConnectionService extends IntentService {
 
         SSID = wifi.getSSID(intent);
 
+        // Ignore quick restarts of a healthy session (Wi-Fi off/on bursts):
+        // the next network state change will start the service again
+        if (!ACTION_STOP.equals(intent.getAction()) && !intent.getBooleanExtra(EXTRA_STOP, false)
+                && SystemClock.elapsedRealtime() - last_stop_time < RESTART_DEBOUNCE_MS
+                && SSID.equals(last_stop_ssid)
+                && (last_stop_result == Provider.RESULT.CONNECTED ||
+                    last_stop_result == Provider.RESULT.ALREADY_CONNECTED)) {
+            Logger.log(this, "Not starting: debounced quick restart");
+            return START_NOT_STICKY;
+        }
+
         // Ignore if service is already running
         if (lock.isLocked()) {
             // Service is shutting down. Trying to interrupt
@@ -488,6 +527,11 @@ public class ConnectionService extends IntentService {
             }
             lock.unlock();
 
+            // Remember the session state for the restart debounce
+            last_stop_time = SystemClock.elapsedRealtime();
+            last_stop_ssid = SSID;
+            last_stop_result = last_result;
+
             notify.hide();
 
             Logger.log(this, "Broadcast | ConnectionService (RUNNING = false)");
@@ -501,6 +545,7 @@ public class ConnectionService extends IntentService {
 
     private boolean ignore_midsession = false;
     private boolean midsession_solved = false;
+    private boolean midsession_fail_reported = false;
 
     private boolean handleMidsession(Gen204 gen_204, Gen204Result res_204) {
         Provider midsession = Provider.find(this, res_204.getFalseNegative())
@@ -540,16 +585,21 @@ public class ConnectionService extends IntentService {
         } else {
             Logger.log(this, "Midsession | Unable to solve, ignoring...");
 
-            String msg = getString(R.string.auth_midsession_fail);
-            SpannableString message = new SpannableString(msg);
-            message.setSpan(new ClickableSpan() {
-                @Override
-                public void onClick(@NonNull View widget) {
-                    settings.edit().putBoolean("pref_internet_midsession", false).apply();
-                    Toast.makeText(ConnectionService.this, R.string.done, Toast.LENGTH_SHORT).show();
-                }
-            }, msg.indexOf('>'), msg.indexOf('<') + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            Logger.log(message);
+            // Show the user-facing message only once per service session
+            if (!midsession_fail_reported) {
+                midsession_fail_reported = true;
+
+                String msg = getString(R.string.auth_midsession_fail);
+                SpannableString message = new SpannableString(msg);
+                message.setSpan(new ClickableSpan() {
+                    @Override
+                    public void onClick(@NonNull View widget) {
+                        settings.edit().putBoolean("pref_internet_midsession", false).apply();
+                        Toast.makeText(ConnectionService.this, R.string.done, Toast.LENGTH_SHORT).show();
+                    }
+                }, msg.indexOf('>'), msg.indexOf('<') + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                Logger.log(message);
+            }
         }
 
         return false;
@@ -701,6 +751,7 @@ public class ConnectionService extends IntentService {
         // Try to connect
         Logger.log(getString(R.string.algorithm_name, provider.getName()));
         Provider.RESULT result = connect(provider);
+        last_result = result;
 
         // Bring VPN back after authorization attempt
         restoreVpn(result);
