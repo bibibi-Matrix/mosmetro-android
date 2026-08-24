@@ -334,6 +334,10 @@ public class HttpResponse {
         if (document != null) {
             String html = document.outerHtml();
 
+            if (html.length() > 20000) {
+                html = html.substring(0, 20000) + "\n<!-- truncated -->";
+            }
+
             // Error pages are dumped completely for easier debugging
             if (html.length() > 2000 && code < 400) {
                 return "<!-- file is too long -->";
@@ -359,7 +363,7 @@ public class HttpResponse {
      */
     public static String maskBody(String body) {
         body = MAC_ADDRESS.matcher(body).replaceAll("xx-xx-xx-xx-xx-xx");
-        body = SENSITIVE_JSON_FIELDS.matcher(body).replaceFirst("$1<hidden>$2");
+        body = SENSITIVE_JSON_FIELDS.matcher(body).replaceAll("$1<hidden>$2");
         return body;
     }
 

@@ -680,6 +680,10 @@ public class ConnectionService extends IntentService {
     }
 
     private void main() {
+        // Do not let early exits reuse the previous session's result
+        // for the restart debounce
+        last_result = Provider.RESULT.INTERRUPTED;
+
         notify.icon(R.drawable.ic_notification_connecting_colored,
                     R.drawable.ic_notification_connecting);
 
@@ -798,7 +802,7 @@ public class ConnectionService extends IntentService {
         );
 
         // Wait while internet connection is available
-        int count = 0;
+        int legacy_count = 0;
         int validated_false_count = 0;
 
         while (running.sleep(1000)) {
@@ -814,26 +818,30 @@ public class ConnectionService extends IntentService {
                     // check while it keeps reporting the network as validated
                     Boolean validated = wifi.isNetworkValidated();
 
-                    if (validated == null) continue;
-
-                    if (validated) {
+                    if (validated != null && validated) {
                         validated_false_count = 0;
+                        legacy_count = 0;
                         continue;
                     }
 
-                    // Tolerate short re-validation gaps, then confirm
-                    // the real loss with our own HTTP check
-                    if (++validated_false_count < VALIDATED_FALSE_GRACE) continue;
+                    if (validated != null) {
+                        // Tolerate short re-validation gaps, then confirm
+                        // the real loss with our own HTTP check
+                        if (++validated_false_count < VALIDATED_FALSE_GRACE) continue;
 
-                    validated_false_count = 0;
+                        validated_false_count = 0;
 
-                    if (!isConnected(gen_204)) break;
-                } else {
-                    // Legacy periodic HTTP polling on old Android versions
-                    if (++count == pref_internet_check_interval) {
-                        count = 0;
                         if (!isConnected(gen_204)) break;
+                        continue;
                     }
+
+                    // Unknown state: fall back to periodic HTTP polling
+                }
+
+                // Legacy periodic HTTP polling
+                if (++legacy_count == pref_internet_check_interval) {
+                    legacy_count = 0;
+                    if (!isConnected(gen_204)) break;
                 }
             }
         }

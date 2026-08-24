@@ -391,6 +391,8 @@ public class MosMetroV2 extends Provider {
          * marketing pages) is pointless and only wastes time.
          */
         add(vars -> {
+            if (!vars.containsKey("post_auth_redirect")) return true;
+
             if (gen_204.check(true).isConnected()) {
                 Logger.log(Logger.LEVEL.DEBUG,
                         "Internet works, skipping post-auth redirects");

@@ -238,7 +238,6 @@ public class Gen204 {
      */
     public boolean confirmFalseNegative(@Nullable HttpResponse false_negative) {
         boolean checked = false;
-        boolean single_blocked = true;
 
         for (int i = 0; i < 3; i++) {
             String url = "http://" + random.choose(URL_DEFAULT);
@@ -254,21 +253,21 @@ public class Gen204 {
                 if (res.getResponseCode() != 204) {
                     // Another endpoint fails too: this is a real midsession,
                     // no endpoint must be blacklisted
-                    single_blocked = false;
-                    break;
+                    return true;
                 }
             } catch (IOException ex) {
                 Logger.log(this, url + " | " + ex);
             }
         }
 
-        // No other endpoint was checked: assume the old behavior
-        if (!checked || single_blocked && checked) {
-            blacklist(false_negative);
-            return !checked;
+        if (!checked) {
+            // No other endpoint was checked: assume the old behavior
+            return true;
         }
 
-        return true;
+        // All other endpoints work: only a single endpoint is blocked
+        blacklist(false_negative);
+        return false;
     }
 
     /**
