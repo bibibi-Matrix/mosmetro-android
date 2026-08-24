@@ -272,11 +272,6 @@
     <string name="pref_vpn_package_summary">Package name of the VPN app which will be disabled before authorization and launched back afterwards. Root access is required for automatic mode.</string>
     <string name="auth_rzd_info">Collecting RZD_FREE portal information</string>
     <string name="auth_rzd_result">RZD_FREE: authorization algorithm is not implemented yet, collected information is written to the log</string>
-    <string name="auth_rzd_phone_send">Sending phone number</string>
-    <string name="auth_rzd_code">Entering SMS code</string>
-    <string name="auth_rzd_no_phone">Phone number for RZD_FREE is not set (Settings → Connection)</string>
-    <string name="pref_rzd_phone">RZD_FREE phone number</string>
-    <string name="pref_rzd_phone_summary">Phone number to receive the authorization code in RZD trains</string>
     <string name="auth_research_manual">The portal is opened in an embedded window. Please complete the authorization manually (phone number, SMS code, etc.) вЂ” the connection will be detected automatically and every portal action will be written to the log.</string>
     <string name="auth_research_wait">Waiting for manual authorization</string>
     <string name="pref_debug_research">Authorization research mode</string>

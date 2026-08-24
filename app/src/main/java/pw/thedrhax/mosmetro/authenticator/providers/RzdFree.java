@@ -24,12 +24,7 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import pw.thedrhax.mosmetro.R;
 import pw.thedrhax.mosmetro.activities.ResearchActivity;
@@ -46,19 +41,19 @@ import pw.thedrhax.mosmetro.httpclient.clients.OkHttp;
 import pw.thedrhax.util.Logger;
 
 /**
- * The RzdFree class implements automatic authorization in the RZD_FREE
- * network (TTK captive portal, wifilogin.ttk.ru).
+ * The RzdFree class handles authorization in the RZD_FREE network
+ * (TTK captive portal, wifilogin.ttk.ru).
  *
- * Algorithm:
- *   1. Any HTTP request is redirected to /cp/isg?dst=<url>;
- *      this request establishes session cookies (dst, wnam, mac).
- *   2. POST /cp/sms with the phone number sends the SMS code.
- *   3. The code itself must be entered by the user in the embedded
- *      window; the connection is detected automatically afterwards.
+ * The portal remembers devices by their MAC address, so it asks for
+ * the phone number and SMS code only once. All subsequent connections
+ * pass automatically right after opening any page of the portal.
+ *
+ * Therefore this provider simply opens the portal in an embedded
+ * WebView window: usually it passes instantly, and the connection is
+ * detected by generate_204 polling. First-time users complete the
+ * short form manually in the same window.
  *
  * Detection: redirect to any wifilogin.ttk.ru URL.
- *
- * @see ResearchActivity
  */
 
 public class RzdFree extends Provider {
@@ -82,82 +77,21 @@ public class RzdFree extends Provider {
                     redirect = PORTAL;
                 }
 
-                dump(TAG, response);
+                ResearchWV.dump(TAG, response);
                 return true;
             }
         });
 
         /**
-         * Sending phone number: GET portal page (establishes cookies),
-         * find the SMS form and submit it with the configured number.
+         * Opening the portal in the embedded WebView window
          */
-        add(new NamedTask(context.getString(R.string.auth_rzd_phone_send)) {
+        add(new NamedTask(context.getString(R.string.auth_webview_page)) {
             @Override
             public boolean run(HashMap<String, Object> vars) {
-                String phone = settings.getString("pref_rzd_phone", "")
-                        .replaceAll("[^0-9]", "");
-
-                if (phone.length() == 11 && phone.startsWith("8")) {
-                    phone = "7" + phone.substring(1);
-                }
-
-                if (phone.isEmpty()) {
-                    Logger.log(context.getString(R.string.error,
-                            context.getString(R.string.auth_rzd_no_phone)
-                    ));
-                    vars.put("result", RESULT.NOT_SUPPORTED);
-                    return false;
-                }
-
-                try {
-                    HttpResponse page = client.get(redirect).execute();
-                    Document doc = page.getPageContent();
-
-                    Element sms_form = findForm(doc, "/cp/sms");
-                    if (sms_form == null) {
-                        Logger.log(Logger.LEVEL.DEBUG,
-                                TAG + " | SMS form not found on the page");
-                        vars.put("result", RESULT.NOT_SUPPORTED);
-                        return false;
-                    }
-
-                    Map<String, String> fields = collectInputs(sms_form);
-                    String phone_field = detectPhoneField(sms_form);
-                    fields.put(phone_field, phone);
-
-                    String action = sms_form.absUrl("action");
-                    if (action.isEmpty()) action = redirect;
-
-                    HttpResponse result = client.post(action, fields).execute();
-                    Logger.log(Logger.LEVEL.DEBUG, TAG + " | SMS form result: "
-                            + result.getResponseCode());
-
-                    return true;
-                } catch (Exception ex) {
-                    Logger.log(Logger.LEVEL.DEBUG, ex);
-                    Logger.log(context.getString(R.string.error,
-                            context.getString(R.string.auth_error_server)
-                    ));
-                    vars.put("result", RESULT.ERROR);
-                    return false;
-                }
-            }
-        });
-
-        /**
-         * The SMS code can not be received automatically: open the code
-         * entry page in the embedded window and let the user finish.
-         */
-        add(new NamedTask(context.getString(R.string.auth_rzd_code)) {
-            @Override
-            public boolean run(HashMap<String, Object> vars) {
-                Client activity_client = new OkHttp(context);
-                activity_client.interceptors.add(request_logger());
-                activity_client.interceptors.add(response_logger());
+                Client activity_client = buildClient();
 
                 ResearchActivity.pending_client = activity_client;
-                ResearchActivity.pending_url =
-                        "https://wifilogin.ttk.ru/cp/sms";
+                ResearchActivity.pending_url = redirect;
                 ResearchActivity.setState(ResearchActivity.STATE_RUNNING);
 
                 context.startActivity(new Intent(context, ResearchActivity.class)
@@ -169,12 +103,22 @@ public class RzdFree extends Provider {
         });
 
         /**
-         * Waiting for manual authorization to succeed or be cancelled
+         * Waiting for the portal to pass (usually instant for known
+         * devices) or for the user to finish/cancel manually
          */
         add(new WaitTask(this, context.getString(R.string.auth_research_wait)) {
             @Override
             public boolean until(HashMap<String, Object> vars) {
                 if (ResearchActivity.state == ResearchActivity.STATE_CANCELLED) {
+                    // User might close the window after the portal has
+                    // already passed: verify before reporting cancellation
+                    Gen204.Gen204Result res = gen_204.check(true);
+
+                    if (res.isConnected() && !res.isFalseNegative()) {
+                        Logger.log(TAG + " | Connection opened");
+                        return true;
+                    }
+
                     Logger.log(TAG + " | Cancelled");
                     vars.put("result", RESULT.INTERRUPTED);
                     return true;
@@ -193,99 +137,56 @@ public class RzdFree extends Provider {
     }
 
     /**
-     * Finds a form which posts to the given path fragment.
+     * Builds a fresh client with logging interceptors for the
+     * embedded window session.
      */
-    @Nullable
-    private static Element findForm(Document doc, String action_part) {
-        for (Element form : doc.getElementsByTag("form")) {
-            if (form.attr("action").contains(action_part)) {
-                return form;
+    private Client buildClient() {
+        Client client = new OkHttp(context);
+
+        client.interceptors.add(new InterceptorTask(
+                ".*(ads\\.adfox\\.ru|mc\\.yandex\\.ru|ac\\.yandex\\.ru|top-fwz1\\.mail\\.ru|doubleclick\\.net|googlesyndication\\.com).*") {
+            @NonNull @Override
+            public HttpResponse request(Client c, HttpRequest request) throws IOException {
+                Logger.log(Logger.LEVEL.DEBUG, TAG + " | Blocked: " + request.getUrl());
+                return new HttpResponse(request, "");
             }
-        }
+        });
 
-        // Fall back to the first form with any inputs
-        for (Element form : doc.getElementsByTag("form")) {
-            if (!form.getElementsByTag("input").isEmpty()) {
-                return form;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Collects all named inputs of the form preserving hidden values.
-     */
-    private static Map<String, String> collectInputs(Element form) {
-        Map<String, String> fields = new HashMap<>();
-
-        for (Element input : form.getElementsByTag("input")) {
-            String name = input.attr("name");
-            if (name.isEmpty()) continue;
-
-            String type = input.attr("type").toLowerCase();
-            if ("checkbox".equals(type) && !input.hasAttr("checked")) continue;
-
-            fields.put(name, input.attr("value"));
-        }
-
-        return fields;
-    }
-
-    /**
-     * Detects the phone input of the form: by type=tel, by name,
-     * or falls back to the first visible text input.
-     */
-    private static String detectPhoneField(Element form) {
-        for (Element input : form.getElementsByTag("input")) {
-            if ("tel".equalsIgnoreCase(input.attr("type"))) {
-                return input.hasAttr("name") ? input.attr("name") : "phone";
-            }
-        }
-
-        for (Element input : form.getElementsByTag("input")) {
-            String name = input.attr("name").toLowerCase();
-            if (name.contains("phone")) {
-                return input.attr("name");
-            }
-        }
-
-        return "phone";
-    }
-
-    /**
-     * Interceptor used to log requests made by the embedded window.
-     */
-    private InterceptorTask request_logger() {
-        return new InterceptorTask(".*") {
+        client.interceptors.add(new InterceptorTask(".*") {
             @Nullable @Override
-            public HttpResponse request(Client client, HttpRequest request) throws IOException {
+            public HttpResponse request(Client c, HttpRequest request) throws IOException {
                 Logger.log(Logger.LEVEL.DEBUG,
                         TAG + " | -> " + request.getMethod() + " " + request.getUrl());
                 return null; // pass through
             }
-        };
-    }
+        });
 
-    /**
-     * Interceptor used to log responses inside the embedded window.
-     */
-    private InterceptorTask response_logger() {
-        return new InterceptorTask(".*") {
+        client.interceptors.add(new InterceptorTask(".*") {
             @NonNull @Override
-            public HttpResponse response(Client client, HttpRequest request, HttpResponse response) throws IOException {
+            public HttpResponse response(Client c, HttpRequest request, HttpResponse response) throws IOException {
                 Logger.log(Logger.LEVEL.DEBUG, TAG + " | <- " +
                         response.getResponseCode() + " " + request.getUrl());
+
+                // Hook native form submissions to capture POST bodies
+                if (response.isHtml()) {
+                    response.getPageContent().body().append(
+                            "<script>(function(){function ser(f){var d={action:f.action,method:f.method};" +
+                            "try{for(var i=0;i<f.elements.length;i++){var e=f.elements[i];" +
+                            "if(e.name)d[e.name]=e.value;}}catch(e){}return JSON.stringify(d);}" +
+                            "document.addEventListener('submit',function(ev){try{" +
+                            "console.log('RESEARCH|FORM|'+ser(ev.target));}catch(e){}},true);" +
+                            "var o=HTMLFormElement.prototype.submit;" +
+                            "if(o){HTMLFormElement.prototype.submit=function(){try{" +
+                            "console.log('RESEARCH|FORM|'+ser(this));}catch(e){}}" +
+                            "return o.apply(this,arguments);};})();</script>"
+                    );
+                }
+
                 return response;
             }
-        };
-    }
+        });
 
-    /**
-     * Logs structured information about the portal page.
-     */
-    private void dump(String tag, HttpResponse response) {
-        ResearchWV.dump(tag, response);
+        return client;
     }
 
     /**

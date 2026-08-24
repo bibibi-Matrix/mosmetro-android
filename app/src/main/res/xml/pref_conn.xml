@@ -25,13 +25,6 @@
         android:title="@string/pref_bmstu"
         android:summary="@string/pref_bmstu_summary" />
 
-    <EditTextPreference
-        android:defaultValue=""
-        android:key="pref_rzd_phone"
-        android:inputType="phone"
-        android:title="@string/pref_rzd_phone"
-        android:summary="@string/pref_rzd_phone_summary" />
-
     <PreferenceCategory android:title="@string/pref_category_wifi" />
 
     <CheckBoxPreference

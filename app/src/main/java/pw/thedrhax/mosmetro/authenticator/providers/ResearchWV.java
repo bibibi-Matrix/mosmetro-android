@@ -157,6 +157,15 @@ public class ResearchWV extends Provider {
             @Override
             public boolean until(HashMap<String, Object> vars) {
                 if (ResearchActivity.state == ResearchActivity.STATE_CANCELLED) {
+                    // User might close the window after the portal has
+                    // already passed: verify before reporting cancellation
+                    Gen204.Gen204Result res = gen_204.check(true);
+
+                    if (res.isConnected() && !res.isFalseNegative()) {
+                        Logger.log(TAG + " | Connection opened");
+                        return true;
+                    }
+
                     Logger.log(TAG + " | Cancelled");
                     vars.put("result", RESULT.INTERRUPTED);
                     return true;
