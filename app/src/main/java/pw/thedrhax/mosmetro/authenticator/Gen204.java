@@ -106,7 +106,7 @@ public class Gen204 {
         }
 
         for (int i = 0; i < 3; i++) {
-            String url = schema + "://" + random.choose(available);
+            String url = schema + "://" + random.choose(available.toArray(new String[0]));
 
             try {
                 HttpResponse res = client.get(url).execute();
