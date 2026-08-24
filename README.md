@@ -1,12 +1,12 @@
-# Wi-Fi в метро [![Build Status](https://ci.drhx.ru/api/badges/mosmetro-android/mosmetro-android/status.svg?ref=refs/heads/master)](https://ci.drhx.ru/mosmetro-android/mosmetro-android) [![ВКонтакте](.github/resources/vk-box.png)](https://vk.com/wifi_v_metro) [![Telegram](.github/resources/telegram.png)](https://t.me/joinchat/0S7nOjfkV2E2OTAy)
+# Wi-Fi в метро [![Build Experimental](https://github.com/bibibi-Matrix/mosmetro-android/actions/workflows/experimental.yml/badge.svg?branch=experimental)](https://github.com/bibibi-Matrix/mosmetro-android/actions/workflows/experimental.yml) [![ВКонтакте](.github/resources/vk-box.png)](https://vk.com/wifi_v_metro) [![Telegram](.github/resources/telegram.png)](https://t.me/joinchat/0S7nOjfkV2E2OTAy)
 
 Данное приложение предназначено для автоматической авторизации Android-устройств в сетях Wi-Fi общественного транспорта Москвы, Санкт-Петербурга и других городов России, в которых действует провайдер МаксимаТелеком и его партнёры. Поддерживаются версии Android 3.0 (SDK 11) и выше.
 
 ## Установка
 
-Приложение включает в себя встроенную систему обновления, которая будет сообщать о появлении новых сборок. В данный момент этот канал распространения сборок является основным. Загрузить самую актуальную стабильную сборку можно по [этой ссылке](https://mosmetro.duckdns.org/api/v1/download.php?branch=master). Данная сборка синхронизирована с веткой master этого репозитория. Также доступны другие ветки обновления, автоматически появляющиеся при добавлении новых веток в репозиторий.
+Приложение включает в себя встроенную систему обновления, которая будет сообщать о появлении новых сборок. Актуальные сборки публикуются в [разделе релизов этого репозитория](https://github.com/bibibi-Matrix/mosmetro-android/releases). Каналы обновлений настраиваются по веткам репозитория: стабильные сборки публикуются в ветке master, экспериментальные — в ветке experimental.
 
-Релизные версии также доступны в ~~Google Play~~ ([уже нет](https://vk.com/wifi_v_metro?w=wall-113596028_4807)), в [разделе релизов GitHub](https://github.com/mosmetro-android/mosmetro-android/releases) и в [F-Droid](https://f-droid.org/packages/pw.thedrhax.mosmetro). Обратите внимание, что F-Droid самостоятельно собирает каждый релиз, из-за чего сборки оттуда подписаны другим ключом. Это означает, что сменить версию из F-Droid на любую другую можно только путём предварительного удаления приложения с устройства.
+Релизы также доступны в [разделе релизов GitHub](https://github.com/bibibi-Matrix/mosmetro-android/releases). Обратите внимание, что сборки из разных каналов обновления могут быть подписаны разными ключами: смена канала возможна только путём предварительного удаления приложения с устройства.
 
 ## Использование
 
