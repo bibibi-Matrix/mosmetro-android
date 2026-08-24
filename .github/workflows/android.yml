@@ -1,0 +1,93 @@
+name: Build APK
+
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - 'updates/**'
+      - '**.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      BRANCH_NAME: master
+      BUILD_NUMBER: ${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.7.1'
+
+      - name: Restore keystore
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "$GITHUB_WORKSPACE/mosmetro-android.keystore"
+          cat > keystore.properties <<EOF
+          RELEASE_STORE_FILE=$GITHUB_WORKSPACE/mosmetro-android.keystore
+          RELEASE_STORE_PASSWORD=$STORE_PASSWORD
+          RELEASE_KEY_ALIAS=mosmetro
+          RELEASE_KEY_PASSWORD=$KEY_PASSWORD
+          EOF
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Build release APK
+        run: gradle assembleRelease --no-daemon
+
+      - name: Prepare APK
+        run: |
+          mkdir -p out
+          cp app/build/outputs/apk/release/app-release.apk \
+             out/MosMetro-master-b${{ github.run_number }}.apk
+
+      - name: Publish release
+        run: |
+          gh release delete latest --yes --cleanup-tag 2>/dev/null || true
+          gh release create latest \
+            out/MosMetro-master-b${{ github.run_number }}.apk \
+            --title "MosMetro b${{ github.run_number }}" \
+            --notes "Автоматическая сборка #${{ github.run_number }} (${GITHUB_SHA::7})" \
+            --latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Update data.json
+        run: |
+          URL="https://github.com/bibibi-Matrix/mosmetro-android/releases/download/latest/MosMetro-master-b${{ github.run_number }}.apk"
+          python3 - "$URL" <<'EOF'
+          import json, re, sys
+          url = sys.argv[1]
+          n = int(__import__('os').environ['BUILD_NUMBER'])
+          with open('app/build.gradle') as f:
+              code = int(re.search(r'versionCode\s+(\d+)', f.read()).group(1))
+          with open('updates/data.json') as f:
+              d = json.load(f)
+          b = d['branches']['master']
+          b['version'] = code
+          b['by_build'] = False
+          b['url'] = url
+          b['filename'] = f"MosMetro-master-b{n}.apk"
+          b['message'] = f"Обновление v{code}\n\n* Автоматическая сборка GitHub Actions (master-#{n})"
+          with open('updates/data.json', 'w') as f:
+              json.dump(d, f, ensure_ascii=False, indent=2)
+              f.write('\n')
+          EOF
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add updates/data.json
+          git commit -m "CI: update data.json for b${{ github.run_number }} [skip ci]"
+          git push

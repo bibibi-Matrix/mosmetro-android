@@ -1,0 +1,119 @@
+name: Build Experimental APK
+
+on:
+  push:
+    branches: [experimental]
+    paths-ignore:
+      - 'updates/**'
+      - '**.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      BRANCH_NAME: experimental
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute build number
+        run: |
+          curl -sL -o channel.json \
+            "https://raw.githubusercontent.com/bibibi-Matrix/mosmetro-android/updates/data.json?t=$(date +%s)"
+          N=$(python3 - <<'EOF'
+          import json
+          try:
+              with open('channel.json') as f:
+                  d = json.load(f)
+              n = int(d['branches'].get('experimental', {}).get('build', 0)) + 1
+          except Exception:
+              n = 1
+          print(n)
+          EOF
+          )
+          echo "Build number: $N"
+          echo "BUILD_NUMBER=$N" >> "$GITHUB_ENV"
+          echo "BUILD_NUM=$N" >> "$GITHUB_ENV"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.7.1'
+
+      - name: Restore keystore
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "$GITHUB_WORKSPACE/mosmetro-android.keystore"
+          cat > keystore.properties <<EOF
+          RELEASE_STORE_FILE=$GITHUB_WORKSPACE/mosmetro-android.keystore
+          RELEASE_STORE_PASSWORD=$STORE_PASSWORD
+          RELEASE_KEY_ALIAS=mosmetro
+          RELEASE_KEY_PASSWORD=$KEY_PASSWORD
+          EOF
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Build release APK
+        run: gradle assembleRelease --no-daemon
+
+      - name: Prepare APK
+        run: |
+          mkdir -p out
+          cp app/build/outputs/apk/release/app-release.apk \
+             out/MosMetro-experimental-b${BUILD_NUM}.apk
+
+      - name: Publish release
+        run: |
+          gh release delete experimental --yes --cleanup-tag 2>/dev/null || true
+          gh release create experimental \
+            out/MosMetro-experimental-b${BUILD_NUM}.apk \
+            --title "MosMetro Experimental b${BUILD_NUM}" \
+            --notes "Автоматическая сборка #${BUILD_NUM} (${GITHUB_SHA::7})" \
+            --latest=false
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Update data.json
+        run: |
+          URL="https://github.com/bibibi-Matrix/mosmetro-android/releases/download/experimental/MosMetro-experimental-b${BUILD_NUM}.apk"
+          python3 - "$URL" <<'EOF'
+          import json, os, sys
+          url = sys.argv[1]
+          n = int(os.environ['BUILD_NUMBER'])
+          code = 100000 + n
+          with open('channel.json') as f:
+              d = json.load(f)
+          d['branches']['experimental'] = {
+              'name': 'experimental',
+              'description': 'Экспериментальная ветка: новые функции и исправления перед попаданием в master',
+              'version': code,
+              'build': n,
+              'by_build': False,
+              'url': url,
+              'filename': f"MosMetro-experimental-b{n}.apk",
+              'stable': False,
+              'message': f"Обновление v{code}\n\n* Автоматическая сборка GitHub Actions (experimental-#{n})"
+          }
+          with open('channel.json', 'w') as f:
+              json.dump(d, f, ensure_ascii=False, indent=2)
+              f.write('\n')
+          EOF
+          CONTENT=$(base64 -w0 channel.json)
+          SHA=$(gh api "repos/bibibi-Matrix/mosmetro-android/contents/data.json?ref=updates" --jq .sha)
+          gh api --method PUT "repos/bibibi-Matrix/mosmetro-android/contents/data.json" \
+            -f message="CI: update data.json for experimental b${BUILD_NUM} [skip ci]" \
+            -f content="$CONTENT" \
+            -f branch="updates" \
+            -f sha="$SHA"
+        env:
+          GH_TOKEN: ${{ github.token }}

@@ -1,0 +1,17 @@
+build
+local.properties
+keystore.properties
+.gradle
+.idea
+gradle
+gradlew
+gradlew.bat
+*.iml
+**/.classpath
+.settings
+.project
+bin
+.vscode
+log*.keystore
+/*.apk
+*.keystore

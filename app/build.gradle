@@ -1,0 +1,138 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace 'pw.thedrhax.mosmetro'
+    compileSdk 37
+    buildToolsVersion '36.0.0'
+
+    // Pure-Java module: skip built-in Kotlin compilation and stdlib dependency
+    enableKotlin = false
+
+    defaultConfig {
+        applicationId 'pw.thedrhax.mosmetro'
+        minSdk 23
+        targetSdk 36
+
+        // CI builds get a monotonically growing version code (100000 + build number)
+        def ci_build_number = System.getenv("BUILD_NUMBER")
+        versionCode ci_build_number != null ? 100000 + ci_build_number.toInteger() : 81
+        versionName "3.0.0"
+
+        // Jenkins build info
+        def branch_name = System.getenv("BRANCH_NAME") ?: "play"
+        buildConfigField "String", "BRANCH_NAME", "\"$branch_name\""
+        buildConfigField "Integer", "BUILD_NUMBER", System.getenv("BUILD_NUMBER") ?: "0"
+        resValue "string", "build_branch_name", "\"$branch_name\""
+
+        buildConfigField "String", "API_URL_DATA", "\"https://raw.githubusercontent.com/bibibi-Matrix/mosmetro-android/updates/data.json\""
+        buildConfigField "String", "API_URL_STATS", "\"https://mosmetro.duckdns.org/api/v3/stats\""
+    }
+
+    compileOptions {
+        // Flag to enable support for the new language APIs
+        coreLibraryDesugaringEnabled true
+
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    def keystorePropertiesFile = rootProject.file("keystore.properties")
+    if (keystorePropertiesFile.exists()) {
+        def keystoreProperties = new Properties()
+        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
+        signingConfigs {
+            release {
+                storeFile new File(keystoreProperties['RELEASE_STORE_FILE'])
+                storePassword keystoreProperties['RELEASE_STORE_PASSWORD']
+                keyAlias keystoreProperties['RELEASE_KEY_ALIAS']
+                keyPassword keystoreProperties['RELEASE_KEY_PASSWORD']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources false
+            // proguard-android.txt (with -dontoptimize) was removed in AGP 9;
+            // use the optimizing default config instead
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+        // defaultConfig declares a custom resValue (build_branch_name)
+        resValues true
+    }
+
+    sourceSets {
+        main {
+            res.srcDirs = ['src/main/res', 'src/main/res-generated']
+            jniLibs.srcDirs = ['libs']
+            java {
+                srcDir 'src'
+            }
+        }
+    }
+
+    lint {
+        abortOnError false
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.recyclerview:recyclerview:1.4.0'
+    implementation 'androidx.work:work-runtime:2.11.2'
+    // 5.6+ requires newer toolchain
+    implementation 'com.squareup.okhttp3:okhttp:5.5.0'
+    implementation 'org.jsoup:jsoup:1.23.1'
+    implementation ('com.googlecode.json-simple:json-simple:1.1.1') {
+        exclude module: 'junit'
+    }
+    implementation 'dnsjava:dnsjava:3.6.5'
+    implementation 'com.jayway.jsonpath:json-path:3.0.0'
+    implementation 'net.minidev:json-smart:2.6.0'
+    implementation 'com.github.topjohnwu.libsu:core:6.0.0'
+    implementation 'io.sentry:sentry-android-core:8.53.0'
+
+    // https://developer.android.com/studio/write/java8-support#library-desugaring-versions
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+}
+
+/*
+ * Compatibility with Eclipse and Visual Studio Code
+ */
+
+apply plugin: 'com.greensopinion.gradle-android-eclipse'
+apply plugin: 'eclipse'
+
+buildscript {
+    dependencies {
+        classpath fileTree(dir: 'libs', includes: ['gradle-android-eclipse-1.1.1.jar'])
+    }
+}
+
+// https://github.com/greensopinion/gradle-android-eclipse/issues/9
+configurations {
+    eclipseConfig.extendsFrom implementation
+    eclipseTestConfig.extendsFrom testImplementation
+}
+
+eclipse {
+    classpath {
+        plusConfigurations += [
+            configurations.implementation,
+            configurations.testImplementation,
+            configurations.eclipseConfig,
+            configurations.eclipseTestConfig,
+        ]
+        downloadSources = true
+    }
+}

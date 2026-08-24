@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceScreen
+        android:title="@string/developer"
+        android:summary="@string/developer_info">
+
+        <intent android:action="pw.thedrhax.mosmetro.activities.SafeViewActivity">
+            <extra android:name="action" android:value="android.intent.action.SENDTO" />
+            <extra android:name="data" android:value="mailto:mosmetro@thedrhax.pw" />
+        </intent>
+
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:title="@string/developer_github_repo"
+        android:summary="@string/developer_github_repo_summary">
+
+        <intent android:action="pw.thedrhax.mosmetro.activities.SafeViewActivity">
+            <extra android:name="data" android:value="@string/developer_github_repo_link" />
+        </intent>
+
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:title="@string/developer_vkontakte"
+        android:summary="@string/developer_vkontakte_summary">
+
+        <intent android:action="pw.thedrhax.mosmetro.activities.SafeViewActivity">
+            <extra android:name="data" android:value="@string/developer_vkontakte_link" />
+        </intent>
+
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:title="@string/developer_telegram_channel"
+        android:summary="@string/developer_telegram_channel_summary">
+
+        <intent android:action="pw.thedrhax.mosmetro.activities.SafeViewActivity">
+            <extra android:name="data" android:value="@string/developer_telegram_channel_link" />
+        </intent>
+
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:title="@string/developer_telegram"
+        android:summary="@string/developer_telegram_group_summary">
+
+        <intent android:action="pw.thedrhax.mosmetro.activities.SafeViewActivity">
+            <extra android:name="data" android:value="@string/developer_telegram_link" />
+        </intent>
+
+    </PreferenceScreen>
+
+    <PreferenceCategory
+        android:title="@string/pref_category_contributors">
+
+        <PreferenceScreen
+            android:title="@string/contirutor_revertron"
+            android:summary="@string/contributor_revertron_summary">
+
+            <intent android:action="pw.thedrhax.mosmetro.activities.SafeViewActivity">
+                <extra android:name="data" android:value="@string/contributor_revertron_link" />
+            </intent>
+
+        </PreferenceScreen>
+
+        <PreferenceScreen
+            android:title="@string/contributor_Mikhail_Kuropatkin"
+            android:summary="@string/contrinutor_Mikhail_Kuropatkin_summary">
+
+            <intent android:action="pw.thedrhax.mosmetro.activities.SafeViewActivity">
+                <extra android:name="data" android:value="@string/contributor_Mikhail_Kuropatkin_link" />
+            </intent>
+
+        </PreferenceScreen>
+
+        <PreferenceScreen
+            android:title="@string/contributor_Alexander_Krotov"
+            android:summary="@string/contributor_Alexander_Krotov_summary">
+
+            <intent android:action="pw.thedrhax.mosmetro.activities.SafeViewActivity">
+                <extra android:name="data" android:value="@string/contributor_Alexander_Krotov_link" />
+            </intent>
+
+        </PreferenceScreen>
+
+        <PreferenceScreen
+            android:title="@string/contributor_Igor_Dyatlov"
+            android:summary="@string/contributor_Igor_Dyatlov_summary">
+
+            <intent android:action="pw.thedrhax.mosmetro.activities.SafeViewActivity">
+                <extra android:name="data" android:value="@string/contributor_Igor_Dyatlov_link" />
+            </intent>
+
+        </PreferenceScreen>
+    </PreferenceCategory>
+</PreferenceScreen>
