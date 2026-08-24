@@ -479,6 +479,13 @@ public class ConnectionService extends IntentService {
 
         SSID = wifi.getSSID(intent);
 
+        // System starts on Wi-Fi state changes: when the radio is disabled
+        // there is nothing to do (e.g. right after DISCONNECTED event)
+        if ("Started by system".equals(source) && !wifi.isEnabled()) {
+            Logger.log(Logger.LEVEL.DEBUG, "Not starting: Wi-Fi is disabled");
+            return START_NOT_STICKY;
+        }
+
         // Ignore quick restarts of a healthy session (Wi-Fi off/on bursts):
         // the next network state change will start the service again
         if (!ACTION_STOP.equals(intent.getAction()) && !intent.getBooleanExtra(EXTRA_STOP, false)
@@ -518,7 +525,8 @@ public class ConnectionService extends IntentService {
 
             Logger.date(">>> ");
             Logger.log(getString(R.string.version, Version.getFormattedVersion()));
-            Logger.log(getString(R.string.auth_connecting, SSID));
+            // SSID is logged in main() only after the Wi-Fi checks pass,
+            // so a disabled Wi-Fi never shows a bogus "<unknown ssid>" line
 
             running.set(true);
             boolean first_iteration = true;
@@ -720,6 +728,8 @@ public class ConnectionService extends IntentService {
             running.set(false);
             return;
         }
+
+        Logger.log(getString(R.string.auth_connecting, SSID));
 
         // Wait for IP before detecting the Provider
         if (!waitForIP(unknownNetwork)) {
