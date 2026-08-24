@@ -26,9 +26,6 @@ import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -73,7 +70,6 @@ import pw.thedrhax.util.Util;
 import pw.thedrhax.util.Version;
 
 public class SettingsActivity extends Activity {
-    public static final String ACTION_DONATE = "donate";
     public static final String ACTION_MIDSESSION = "midsession";
 
     private SettingsFragment fragment;
@@ -89,60 +85,6 @@ public class SettingsActivity extends Activity {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.settings_activity, menu);
         return true;
-    }
-
-    private void donate_dialog() {
-        DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                ClipboardManager clipboard = (ClipboardManager)
-                        getSystemService(Context.CLIPBOARD_SERVICE);
-                ClipData clip;
-
-                switch (i) {
-                    case 0: // Yandex.Money / YooMoney
-                        startActivity(new Intent(SettingsActivity.this, SafeViewActivity.class)
-                                .putExtra("data", getString(R.string.donate_yandex_data))
-                        );
-                        break;
-
-                    case 1: // QIWI Wallet
-                        startActivity(new Intent(SettingsActivity.this, SafeViewActivity.class)
-                                .putExtra("data", getString(R.string.donate_qiwi_data))
-                        );
-                        break;
-
-                    case 2: // Sberbank
-                        clip = ClipData.newPlainText("", getString(R.string.donate_sberbank_data));
-                        clipboard.setPrimaryClip(clip);
-
-                        Toast.makeText(SettingsActivity.this,
-                                R.string.clipboard_copy,
-                                Toast.LENGTH_SHORT
-                        ).show();
-                        break;
-
-                    case 3: // FPS
-                        clip = ClipData.newPlainText("", getString(R.string.donate_sbp_data));
-                        clipboard.setPrimaryClip(clip);
-
-                        Toast.makeText(SettingsActivity.this,
-                                R.string.clipboard_copy,
-                                Toast.LENGTH_SHORT
-                        ).show();
-                        break;
-
-                    case 4: // Communities
-                        replaceFragment("about", new AboutFragment());
-                        break;
-                }
-            }
-        };
-
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.action_donate)
-                .setItems(R.array.donate_options, listener)
-                .show();
     }
 
     private void midsession_dialog() {
@@ -166,10 +108,7 @@ public class SettingsActivity extends Activity {
         // R.id values are not compile-time constants anymore (AGP 9)
         int id = item.getItemId();
 
-        if (id == R.id.action_donate) {
-            donate_dialog();
-            return true;
-        } else if (id == android.R.id.home) {
+        if (id == android.R.id.home) {
             onBackPressed();
             return true;
         }
@@ -585,8 +524,6 @@ public class SettingsActivity extends Activity {
             energy_saving_setup();
         if (Build.VERSION.SDK_INT >= 28)
             location_permission_setup();
-        if (getIntent() != null && ACTION_DONATE.equals(getIntent().getAction()))
-            donate_dialog();
         if (getIntent() != null && ACTION_MIDSESSION.equals(getIntent().getAction()))
             midsession_dialog();
     }

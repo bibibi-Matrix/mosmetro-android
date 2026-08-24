@@ -21,7 +21,6 @@
     <string name="try_out_of" formatted="false">попытка %d из %d</string>
     <string name="version" formatted="false">Версия: %s</string>
     <string name="show_debug_log">Показать подробные сообщения</string>
-    <string name="clipboard_copy">Текст скопирован в буфер обмена</string>
     <string name="screen_clear">Очистить экран</string>
     <string name="warning">Предупреждение</string>
     <string name="about">О программе</string>
@@ -161,17 +160,6 @@
     <string name="contributor_Alexander_Krotov_summary">Первый Pull-реквест, миграция на Gradle, английский перевод</string>
     <string name="contributor_Igor_Dyatlov_summary">Графическое оформление, логотип</string>
 
-    <string name="action_donate">Поддержать проект</string>
-    <string name="action_donate_cond">Поддержать</string>
-
-    <string-array name="donate_options">
-        <item>Яндекс.Деньги / ЮMoney</item>
-        <item>QIWI Кошелёк</item>
-        <item>Сбербанк (номер карты)</item>
-        <item>Система быстрых платежей (номер телефона)</item>
-        <item>Вступить в сообщество (Вконтакте, Telegram, GitHub)</item>
-        <item>Отмена</item>
-    </string-array>
     <string name="pref_category_internet">Проверка соединения</string>
     <string name="pref_category_wifi">Управление Wi-Fi</string>
     <string name="permission_request">Запросить разрешение</string>
@@ -249,12 +237,6 @@
     <string name="pref_dnsjava">Альтернативный DNS клиент</string>
     <string name="pref_dnsjava_summary">Всегда использовать собственный DNS клиент вместо системного</string>
     <string name="update_error">Не удалось установить обновление. Попробуйте \"Скачать\" вместо \"Установить\"</string>
-    <string name="pref_notify_donate">Напоминание о поддержке проекта</string>
-    <string name="pref_notify_donate_summary">Раз в 50 успешных подключений приложение сообщит об этом и предложит поддержать проект</string>
-    <string name="notification_donate_title">Поздравляю с %d-м успешным подключением!</string>
-    <string name="notification_donate_text">Я трачу время на разработку, чтобы сэкономить ваше. Если хотите, вы можете поддержать проект. Нажмите на это уведомление, чтобы узнать больше :)</string>
-    <string name="remind_less_frequently">Напоминать реже</string>
-    <string name="do_not_show">Больше не показывать</string>
     <string name="root_unavailable">Права root недоступны</string>
     <string name="captive_fix_message">Для того, чтобы применить это исправление, необходимы либо права root, либо компьютер. Это нужно сделать только один раз.</string>
     <string name="captive_fix_open_manual">Инструкция для ПК</string>

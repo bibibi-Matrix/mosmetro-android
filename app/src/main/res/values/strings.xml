@@ -24,7 +24,6 @@
     <string name="try_out_of" formatted="false">try %d out of %d</string>
     <string name="version" formatted="false">Version: %s</string>
     <string name="show_debug_log">Show verbose messages</string>
-    <string name="clipboard_copy">Text copied to clipboard</string>
     <string name="screen_clear">Clear screen</string>
     <string name="warning">Warning</string>
     <string name="about">About</string>
@@ -178,21 +177,6 @@
     <string name="contributor_Igor_Dyatlov_summary">Graphic design, logo</string>
     <string name="contributor_Igor_Dyatlov_link" translatable="false">https://github.com/igor-dyatlov</string>
 
-    <string name="action_donate">Support the project</string>
-    <string name="action_donate_cond">Donate</string>
-
-    <string-array name="donate_options">
-        <item>Yandex.Money / YooMoney</item>
-        <item>QIWI Wallet</item>
-        <item>Sberbank (card number)</item>
-        <item>Fast Payments System (phone number)</item>
-        <item>Join the community (VK, Telegram, GitHub)</item>
-        <item>Cancel</item>
-    </string-array>
-    <string name="donate_sberbank_data" translatable="false">4274320057156229</string>
-    <string name="donate_sbp_data" translatable="false">79773102862</string>
-    <string name="donate_yandex_data" translatable="false">https://yoomoney.ru/to/410014087156910</string>
-    <string name="donate_qiwi_data" translatable="false">https://my.qiwi.com/Dmytryi-KreG6l0snl</string>
     <string name="pref_category_wifi">Wi-Fi control</string>
     <string name="pref_category_internet">Internet checks</string>
     <string name="open_settings">Open settings</string>
@@ -274,12 +258,6 @@
     <string name="pref_dnsjava">Alternative DNS client</string>
     <string name="pref_dnsjava_summary">Always use custom DNS client instead of the system one</string>
     <string name="update_error">Unable to install the update. Please try \"Download\" instead of \"Install\"</string>
-    <string name="pref_notify_donate">Donation reminder</string>
-    <string name="pref_notify_donate_summary">Show notification about every 50-th successful connection and ask for a donation</string>
-    <string name="notification_donate_title">Congrats on the %d-th successful connection!</string>
-    <string name="notification_donate_text">I spend a lot of time to save yours. If you want, you can support the project. Click on this notification to find out more :)</string>
-    <string name="remind_less_frequently">Remind less</string>
-    <string name="do_not_show">Do not show</string>
     <string name="root_unavailable">Root is unavailable</string>
     <string name="captive_fix_message">You need to have root permissions or a PC to apply this fix. This is only needed to be done once.</string>
     <string name="captive_fix_open_manual">Guide for PC</string>
