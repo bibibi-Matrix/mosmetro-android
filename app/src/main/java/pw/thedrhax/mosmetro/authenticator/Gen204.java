@@ -137,16 +137,30 @@ public class Gen204 {
         HttpResponse rel, unrel;
 
         if (expectPositive) {
+            // Run both checks in parallel to halve the verification time:
+            // both endpoints are always requested in this mode anyway
+            final HttpResponse[] unrel_box = new HttpResponse[1];
+
+            Thread unrel_thread = new Thread(() -> unrel_box[0] = request("http", URL_DEFAULT));
+            unrel_thread.start();
+
             rel = request("https", URL_RELIABLE);
+
+            try {
+                // 3 attempts x default client timeout
+                unrel_thread.join(15000);
+            } catch (InterruptedException ignored) {}
+
+            unrel = unrel_box[0];
         } else {
             rel = request("http", URL_RELIABLE);
 
             if (rel != null && rel.getResponseCode() != 204) {
                 return new Gen204Result(rel); // negative
             }
-        }
 
-        unrel = request("http", URL_DEFAULT);
+            unrel = request("http", URL_DEFAULT);
+        }
 
         if (rel == null) {
             return new Gen204Result(unrel); // probably negative

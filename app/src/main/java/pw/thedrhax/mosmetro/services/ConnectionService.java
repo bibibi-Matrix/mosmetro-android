@@ -101,6 +101,10 @@ public class ConnectionService extends IntentService {
     // Watchdog for waitForIP() when the user-defined timeout is disabled
     private static final int IP_WAIT_WATCHDOG = 15 * 60; // seconds
 
+    // Seconds of system "not validated" state tolerated before
+    // falling back to our own HTTP connectivity check
+    private static final int VALIDATED_FALSE_GRACE = 15;
+
     // Preferences
     private WifiUtils wifi;
     private CaptivePortalFix cpf;
@@ -795,6 +799,8 @@ public class ConnectionService extends IntentService {
 
         // Wait while internet connection is available
         int count = 0;
+        int validated_false_count = 0;
+
         while (running.sleep(1000)) {
             // Stop monitoring when the default network is not Wi-Fi anymore
             if (!wifi.isDefaultNetworkWifi()) {
@@ -802,9 +808,33 @@ public class ConnectionService extends IntentService {
                 break;
             }
 
-            if (pref_internet_check && ++count == pref_internet_check_interval) {
-                count = 0;
-                if (!isConnected(gen_204)) break;
+            if (pref_internet_check) {
+                if (Build.VERSION.SDK_INT >= 24) {
+                    // Zero-traffic fast path: trust the system connectivity
+                    // check while it keeps reporting the network as validated
+                    Boolean validated = wifi.isNetworkValidated();
+
+                    if (validated == null) continue;
+
+                    if (validated) {
+                        validated_false_count = 0;
+                        continue;
+                    }
+
+                    // Tolerate short re-validation gaps, then confirm
+                    // the real loss with our own HTTP check
+                    if (++validated_false_count < VALIDATED_FALSE_GRACE) continue;
+
+                    validated_false_count = 0;
+
+                    if (!isConnected(gen_204)) break;
+                } else {
+                    // Legacy periodic HTTP polling on old Android versions
+                    if (++count == pref_internet_check_interval) {
+                        count = 0;
+                        if (!isConnected(gen_204)) break;
+                    }
+                }
             }
         }
 

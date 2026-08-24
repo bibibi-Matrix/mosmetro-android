@@ -161,6 +161,22 @@ public class WifiUtils {
     }
 
     /**
+     * Check whether the system connectivity check considers the current
+     * network validated. Returns null when the state is unknown
+     * (no network or missing capabilities).
+     */
+    @Nullable
+    public Boolean isNetworkValidated() {
+        Network network = cm.getActiveNetwork();
+        if (network == null) return null;
+
+        NetworkCapabilities caps = cm.getNetworkCapabilities(network);
+        if (caps == null) return null;
+
+        return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+    }
+
+    /**
      * Check whether the network currently used by this process is Wi-Fi
      * rather than cellular. When the process is bound to Wi-Fi
      * (see bindToWifi()), the bound network is returned here,
