@@ -121,8 +121,8 @@ public class ResearchWV extends Provider {
                 activity_client.interceptors.add(request_logger);
                 activity_client.interceptors.add(response_logger);
 
-                ResearchWV.pending_client = activity_client;
-                ResearchWV.pending_url = redirect;
+                ResearchActivity.pending_client = activity_client;
+                ResearchActivity.pending_url = redirect;
                 ResearchActivity.setState(ResearchActivity.STATE_RUNNING);
 
                 context.startActivity(new Intent(context, ResearchActivity.class)
