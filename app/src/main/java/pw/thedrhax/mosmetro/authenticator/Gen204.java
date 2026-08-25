@@ -30,6 +30,7 @@ import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLPeerUnverifiedException;
 
 import pw.thedrhax.mosmetro.httpclient.Client;
+import pw.thedrhax.mosmetro.httpclient.Headers;
 import pw.thedrhax.mosmetro.httpclient.HttpResponse;
 import pw.thedrhax.mosmetro.httpclient.clients.OkHttp;
 import pw.thedrhax.util.Listener;
@@ -238,6 +239,7 @@ public class Gen204 {
      */
     public boolean confirmFalseNegative(@Nullable HttpResponse false_negative) {
         boolean checked = false;
+        boolean portal_seen = false;
 
         for (int i = 0; i < 3; i++) {
             String url = "http://" + random.choose(URL_DEFAULT);
@@ -251,32 +253,56 @@ public class Gen204 {
                 checked = true;
 
                 if (res.getResponseCode() != 204) {
-                    // Another endpoint fails too: this is a real midsession,
-                    // no endpoint must be blacklisted
-                    return true;
+                    // A redirect to a captive portal means the whole
+                    // network dropped the session (real midsession);
+                    // anything else is an endpoint-specific block
+                    String location = res.headers.getFirst(Headers.LOCATION);
+
+                    if (location != null && isPortalUrl(location)) {
+                        portal_seen = true;
+                    } else {
+                        Logger.log(this, url + " | Blocked without portal redirect");
+                    }
                 }
             } catch (IOException ex) {
                 Logger.log(this, url + " | " + ex);
             }
         }
 
-        if (!checked) {
-            // No other endpoint was checked: assume the old behavior
+        if (!checked || portal_seen) {
+            // Real midsession: nothing must be blacklisted
             return true;
         }
 
-        // All other endpoints work: only a single endpoint is blocked
+        // All other endpoints work: only endpoint-specific blocks
         blacklist(false_negative);
         return false;
     }
 
     /**
+     * Checks whether the URL points to one of the known captive portals.
+     */
+    private static boolean isPortalUrl(String url) {
+        return url.contains("wi-fi.ru") ||
+               url.contains("ttk.ru") ||
+               url.contains("lbpfs.bmstu.ru");
+    }
+
+    /**
      * Adds the endpoint to the blacklist until the end of the session.
+     * Captive portal redirects are never blacklisted.
      */
     private void blacklist(@Nullable HttpResponse response) {
         if (response == null) return;
 
         String url = response.getRequest().getUrl();
+
+        String location = response.headers.getFirst(Headers.LOCATION);
+        if (location != null && isPortalUrl(location)) {
+            Logger.log(this, "Not blacklisting captive redirect: " + url);
+            return;
+        }
+
         blocked_hosts.add(url);
         Logger.log(this, "Blacklisted blocked endpoint: " + url);
     }
