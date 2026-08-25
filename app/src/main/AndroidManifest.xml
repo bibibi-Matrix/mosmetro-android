@@ -98,6 +98,12 @@
             android:label="@string/pref_debug_research" />
 
         <activity
+            android:name=".activities.PortalActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/auth_webview_page" />
+
+        <activity
             android:name=".activities.ShortcutDialog"
             android:exported="true"
             android:label="@string/manual_connection_shortcut"

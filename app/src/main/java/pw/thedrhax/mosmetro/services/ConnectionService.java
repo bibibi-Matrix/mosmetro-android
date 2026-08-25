@@ -748,14 +748,57 @@ public class ConnectionService extends IntentService {
             return;
         }
 
-        // Disable VPN before authorization
-        if (!handleVpnBeforeAuth()) {
+        Gen204 gen_204 = new Gen204(this, running);
+
+        // Check if already connected (internet works via WiFi or VPN)
+        Gen204Result res_204 = gen_204.check(false);
+        if (res_204.isConnected()) {
+            Logger.log(getString(R.string.auth_already_connected));
+            last_result = Provider.RESULT.ALREADY_CONNECTED;
+            notify(Provider.RESULT.ALREADY_CONNECTED);
             running.set(false);
             return;
         }
 
+        // VPN is on but no internet — wait for user to disable it
         if (wifi.isVpnConnected()) {
-            Logger.log(Logger.LEVEL.DEBUG, "Warning: VPN detected!");
+            Logger.log(this, "VPN detected without internet, waiting for disconnect...");
+
+            notify.title(getString(R.string.vpn_wait_title))
+                    .text(getString(R.string.vpn_wait_disable))
+                    .progress(0, true)
+                    .show();
+
+            for (int i = 0; i < 60; i++) {
+                if (!running.sleep(1000)) {
+                    running.set(false);
+                    return;
+                }
+                if (!wifi.isVpnConnected()) break;
+            }
+
+            if (wifi.isVpnConnected()) {
+                Logger.log(this, "Stopping by VPN (still connected after 60s)");
+                running.set(false);
+                return;
+            }
+
+            // VPN disconnected — recheck via WiFi
+            wifi.bindToWifi();
+            if (!waitForWiFi()) {
+                Logger.log(this, "Stopping by network type (not Wi-Fi after VPN)");
+                running.set(false);
+                return;
+            }
+
+            res_204 = gen_204.check(false);
+            if (res_204.isConnected()) {
+                Logger.log(getString(R.string.auth_already_connected));
+                last_result = Provider.RESULT.ALREADY_CONNECTED;
+                notify(Provider.RESULT.ALREADY_CONNECTED);
+                running.set(false);
+                return;
+            }
         }
 
         // In research mode every network is interesting, even if its
@@ -772,8 +815,6 @@ public class ConnectionService extends IntentService {
                 .text(getString(R.string.auth_provider_check))
                 .progress(0, true)
                 .show();
-
-        Gen204 gen_204 = new Gen204(this, running);
 
         Provider provider = Provider.find(this, running)
                 .setRunningListener(running)

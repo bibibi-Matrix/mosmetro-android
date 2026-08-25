@@ -32,7 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import pw.thedrhax.mosmetro.R;
-import pw.thedrhax.mosmetro.activities.ResearchActivity;
+import pw.thedrhax.mosmetro.activities.PortalActivity;
 import pw.thedrhax.mosmetro.authenticator.FinalConnectionCheckTask;
 import pw.thedrhax.mosmetro.authenticator.Gen204;
 import pw.thedrhax.mosmetro.authenticator.InitialConnectionCheckTask;
@@ -80,7 +80,6 @@ public class RzdFree extends Provider {
                     redirect = PORTAL;
                 }
 
-                ResearchWV.dump(TAG, response);
                 return true;
             }
         });
@@ -90,7 +89,7 @@ public class RzdFree extends Provider {
          * auto-submitting /cp/login form over plain HTTP; first-time
          * devices fall back to the embedded window with the SMS form.
          */
-        add(new NamedTask(context.getString(R.string.auth_rzd_auto)) {
+        add(new NamedTask(context.getString(R.string.auth_auth_form)) {
             @Override
             public boolean run(HashMap<String, Object> vars) {
                 try {
@@ -131,10 +130,10 @@ public class RzdFree extends Provider {
         /**
          * Waiting for manual authorization to succeed or be cancelled
          */
-        add(new WaitTask(this, context.getString(R.string.auth_research_wait)) {
+        add(new WaitTask(this, context.getString(R.string.auth_webview_script)) {
             @Override
             public boolean until(HashMap<String, Object> vars) {
-                if (ResearchActivity.state == ResearchActivity.STATE_CANCELLED) {
+                if (PortalActivity.state == PortalActivity.STATE_CANCELLED) {
                     // User might close the window after the portal has
                     // already passed: verify before reporting cancellation
                     Gen204.Gen204Result res = gen_204.check(true);
@@ -149,12 +148,12 @@ public class RzdFree extends Provider {
                     return true;
                 }
 
-                return ResearchActivity.state == ResearchActivity.STATE_CONNECTED;
+                return PortalActivity.state == PortalActivity.STATE_CONNECTED;
             }
         }.timeout(300000));
 
         /**
-         * Stop silently if the user cancelled the research session
+         * Stop silently if the user cancelled the session
          */
         add(vars -> !RESULT.INTERRUPTED.equals(vars.get("result")));
 
@@ -191,33 +190,18 @@ public class RzdFree extends Provider {
             public HttpResponse response(Client c, HttpRequest request, HttpResponse response) throws IOException {
                 Logger.log(Logger.LEVEL.DEBUG, TAG + " | <- " +
                         response.getResponseCode() + " " + request.getUrl());
-
-                if (response.isHtml()) {
-                    response.getPageContent().body().append(
-                            "<script>(function(){function ser(f){var d={action:f.action,method:f.method};" +
-                            "try{for(var i=0;i<f.elements.length;i++){var e=f.elements[i];" +
-                            "if(e.name)d[e.name]=e.value;}}catch(e){}return JSON.stringify(d);}" +
-                            "document.addEventListener('submit',function(ev){try{" +
-                            "console.log('RESEARCH|FORM|'+ser(ev.target));}catch(e){}},true);" +
-                            "var o=HTMLFormElement.prototype.submit;" +
-                            "if(o){HTMLFormElement.prototype.submit=function(){try{" +
-                            "console.log('RESEARCH|FORM|'+ser(this));}catch(e){}}" +
-                            "return o.apply(this,arguments);};})();</script>"
-                    );
-                }
-
                 return response;
             }
         });
 
-        ResearchActivity.pending_client = activity_client;
-        ResearchActivity.pending_url = redirect;
-        ResearchActivity.setState(ResearchActivity.STATE_RUNNING);
+        PortalActivity.pending_client = activity_client;
+        PortalActivity.pending_url = redirect;
+        PortalActivity.setState(PortalActivity.STATE_RUNNING);
 
-        context.startActivity(new Intent(context, ResearchActivity.class)
+        context.startActivity(new Intent(context, PortalActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
 
-        Logger.log(context.getString(R.string.auth_research_manual));
+        Logger.log(context.getString(R.string.auth_webview_page));
     }
 
     /**
