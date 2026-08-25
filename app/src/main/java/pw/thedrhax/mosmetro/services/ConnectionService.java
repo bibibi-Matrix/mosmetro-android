@@ -660,6 +660,13 @@ public class ConnectionService extends IntentService {
             return;
         }
 
+        // Unknown SSID: skip internet check and provider detection
+        if (unknownNetwork && !pref_research) {
+            Logger.log(this, "Not checking: SSID is not supported (" + SSID + ")");
+            running.set(false);
+            return;
+        }
+
         Gen204 gen_204 = new Gen204(this, running);
 
         // Check if already connected
@@ -670,16 +677,6 @@ public class ConnectionService extends IntentService {
             notify(Provider.RESULT.ALREADY_CONNECTED);
             running.set(false);
             return;
-        }
-
-        // In research mode every network is interesting, even if its
-        // portal does not answer the DNS probes of supported providers
-        if (unknownNetwork && !pref_research) {
-            if (!Provider.dnsCheck(this)) {
-                Logger.log(this, "Stopping by dns probe (unknown network)");
-                running.set(false);
-                return;
-            }
         }
 
         notify.title(getString(R.string.auth_connecting, SSID))
