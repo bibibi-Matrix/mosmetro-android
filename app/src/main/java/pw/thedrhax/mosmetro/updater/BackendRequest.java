@@ -50,7 +50,7 @@ public class BackendRequest {
     public BackendRequest(Context context) {
         this.context = context;
         this.settings = PreferenceManager.getDefaultSharedPreferences(context);
-        this.client = new OkHttp(context);
+        this.client = new OkHttp(context).setBindWifi(false);
     }
 
     private boolean checkNews(DocumentContext data) {

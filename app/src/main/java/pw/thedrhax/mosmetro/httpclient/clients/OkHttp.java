@@ -72,6 +72,12 @@ public class OkHttp extends Client {
     private OkHttpClient client;
     private WifiUtils wifi;
     private Call last_call = null;
+    private boolean bindWifi = true;
+
+    public Client setBindWifi(boolean bind) {
+        this.bindWifi = bind;
+        return this;
+    }
 
     // Source: https://github.com/square/okhttp/issues/2372#issuecomment-244807676
     private static OkHttpClient.Builder enableTls12OnPreLollipop(OkHttpClient.Builder client) {
@@ -272,7 +278,7 @@ public class OkHttp extends Client {
             builder.addHeader(Headers.ACCEPT, accept);
         }
 
-        if (context != null && context.getApplicationContext() != null) {
+        if (bindWifi && context != null && context.getApplicationContext() != null) {
             wifi.bindToWifi();
         }
 
