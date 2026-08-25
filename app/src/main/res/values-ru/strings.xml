@@ -251,6 +251,7 @@
     <string name="auth_rzd_info">Сбор информации о портале RZD_FREE</string>
     <string name="auth_rzd_result">RZD_FREE: алгоритм авторизации пока не реализован, собранная информация записана в лог</string>
     <string name="auth_research_manual">Портал открыт во встроенном окне. Пройдите авторизацию вручную (телефон, код из СМС и т.п.) — соединение будет определено автоматически, а все действия портала записаны в лог.</string>
+    <string name="auth_rzd_auto">Автоматический вход в сеть РЖД</string>
     <string name="auth_research_wait">Ожидание ручной авторизации</string>
     <string name="pref_debug_research">Режим исследования авторизации</string>
     <string name="pref_debug_research_summary">Не авторизовываться автоматически ни в одной сети. Вместо этого открывать портал любой сети Wi-Fi во встроенном окне и записывать весь процесс авторизации в лог.</string>

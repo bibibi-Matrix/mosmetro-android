@@ -273,6 +273,7 @@
     <string name="auth_rzd_info">Collecting RZD_FREE portal information</string>
     <string name="auth_rzd_result">RZD_FREE: authorization algorithm is not implemented yet, collected information is written to the log</string>
     <string name="auth_research_manual">The portal is opened in an embedded window. Please complete the authorization manually (phone number, SMS code, etc.) вЂ” the connection will be detected automatically and every portal action will be written to the log.</string>
+    <string name="auth_rzd_auto">Automatic RZD login</string>
     <string name="auth_research_wait">Waiting for manual authorization</string>
     <string name="pref_debug_research">Authorization research mode</string>
     <string name="pref_debug_research_summary">Do not authorize automatically in any network. Instead, open the captive portal of any Wi-Fi network in an embedded window and record the whole authorization process to the log.</string>

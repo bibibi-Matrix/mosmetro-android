@@ -29,6 +29,7 @@ import org.jsoup.nodes.Element;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 import pw.thedrhax.mosmetro.R;
 import pw.thedrhax.mosmetro.activities.ResearchActivity;
