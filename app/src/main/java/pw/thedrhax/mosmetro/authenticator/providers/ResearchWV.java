@@ -88,7 +88,8 @@ public class ResearchWV extends Provider {
             // regular POST requests, so serialize forms on submit instead
             if (response.isHtml()) {
                 response.getPageContent().body().append(
-                        "<script>(function(){function ser(f){var d={action:f.action,method:f.method};" +
+                        "<script>(function(){try{console.log('RESEARCH|HOOK|loaded');" +
+                        "function ser(f){var d={action:f.action,method:f.method};" +
                         "try{for(var i=0;i<f.elements.length;i++){var e=f.elements[i];" +
                         "if(e.name)d[e.name]=e.value;}}catch(e){}return JSON.stringify(d);}" +
                         "document.addEventListener('submit',function(ev){try{" +
@@ -96,7 +97,8 @@ public class ResearchWV extends Provider {
                         "var o=HTMLFormElement.prototype.submit;" +
                         "if(o){HTMLFormElement.prototype.submit=function(){try{" +
                         "console.log('RESEARCH|FORM|'+ser(this));}catch(e){}}" +
-                        "return o.apply(this,arguments);};})();</script>"
+                        "return o.apply(this,arguments);};}catch(e){" +
+                        "console.log('RESEARCH|HOOK|error: '+e);}})();</script>"
                 );
             }
 
