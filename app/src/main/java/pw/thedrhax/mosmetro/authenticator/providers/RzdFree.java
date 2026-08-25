@@ -24,6 +24,9 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -46,14 +49,11 @@ import pw.thedrhax.util.Logger;
  * The RzdFree class handles authorization in the RZD_FREE network
  * (TTK captive portal, wifilogin.ttk.ru).
  *
- * The portal remembers devices by their MAC address, so it asks for
- * the phone number and SMS code only once. All subsequent connections
- * pass automatically right after opening any page of the portal.
- *
- * Therefore this provider simply opens the portal in an embedded
- * WebView window: usually it passes instantly, and the connection is
- * detected by generate_204 polling. First-time users complete the
- * short form manually in the same window.
+ * The portal remembers devices by MAC, so known devices are logged in
+ * automatically: the portal page contains an auto-submitting form
+ * pointing to /cp/login which is replayed over plain HTTP without any
+ * UI. First-time devices get the SMS form instead -- in that case the
+ * page is opened in an embedded WebView window for manual completion.
  *
  * Detection: redirect to any wifilogin.ttk.ru URL.
  */
@@ -85,28 +85,50 @@ public class RzdFree extends Provider {
         });
 
         /**
-         * Opening the portal in the embedded WebView window
+         * Authorization: known devices are logged in by replaying the
+         * auto-submitting /cp/login form over plain HTTP; first-time
+         * devices fall back to the embedded window with the SMS form.
          */
-        add(new NamedTask(context.getString(R.string.auth_webview_page)) {
+        add(new NamedTask(context.getString(R.string.auth_rzd_auto)) {
             @Override
             public boolean run(HashMap<String, Object> vars) {
-                Client activity_client = buildClient();
+                try {
+                    HttpResponse page = client.get(redirect).execute();
+                    Document doc = page.getPageContent();
 
-                ResearchActivity.pending_client = activity_client;
-                ResearchActivity.pending_url = redirect;
-                ResearchActivity.setState(ResearchActivity.STATE_RUNNING);
+                    Element login_form = findForm(doc, "/cp/login");
 
-                context.startActivity(new Intent(context, ResearchActivity.class)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                    if (login_form != null) {
+                        Map<String, String> fields = collectInputs(login_form);
 
-                Logger.log(context.getString(R.string.auth_research_manual));
+                        String action = login_form.absUrl("action");
+                        if (action.isEmpty()) action = redirect;
+
+                        HttpResponse result = client.post(action, fields).execute();
+                        Logger.log(Logger.LEVEL.DEBUG,
+                                TAG + " | Login form result: " + result.getResponseCode());
+
+                        Gen204.Gen204Result check = gen_204.check(true);
+
+                        if (check.isConnected() && !check.isFalseNegative()) {
+                            vars.put("result", RESULT.CONNECTED);
+                            return false;
+                        }
+                    }
+
+                    // No auto-login form: first-time device, show the
+                    // SMS/registration page in the embedded window
+                } catch (IOException ex) {
+                    Logger.log(Logger.LEVEL.DEBUG, ex);
+                }
+
+                openWindow(vars);
                 return true;
             }
         });
 
         /**
-         * Waiting for the portal to pass (usually instant for known
-         * devices) or for the user to finish/cancel manually
+         * Waiting for manual authorization to succeed or be cancelled
          */
         add(new WaitTask(this, context.getString(R.string.auth_research_wait)) {
             @Override
@@ -139,13 +161,13 @@ public class RzdFree extends Provider {
     }
 
     /**
-     * Builds a fresh client with logging interceptors for the
-     * embedded window session.
+     * Opens the portal page in the embedded WebView window with
+     * logging interceptors attached.
      */
-    private Client buildClient() {
-        Client client = new OkHttp(context);
+    private void openWindow(HashMap<String, Object> vars) {
+        Client activity_client = new OkHttp(context);
 
-        client.interceptors.add(new InterceptorTask(
+        activity_client.interceptors.add(new InterceptorTask(
                 ".*(ads\\.adfox\\.ru|mc\\.yandex\\.ru|ac\\.yandex\\.ru|top-fwz1\\.mail\\.ru|doubleclick\\.net|googlesyndication\\.com).*") {
             @NonNull @Override
             public HttpResponse request(Client c, HttpRequest request) throws IOException {
@@ -154,22 +176,21 @@ public class RzdFree extends Provider {
             }
         });
 
-        client.interceptors.add(new InterceptorTask(".*") {
+        activity_client.interceptors.add(new InterceptorTask(".*") {
             @Nullable @Override
             public HttpResponse request(Client c, HttpRequest request) throws IOException {
                 Logger.log(Logger.LEVEL.DEBUG,
                         TAG + " | -> " + request.getMethod() + " " + request.getUrl());
-                return null; // pass through
+                return null;
             }
         });
 
-        client.interceptors.add(new InterceptorTask(".*") {
+        activity_client.interceptors.add(new InterceptorTask(".*") {
             @NonNull @Override
             public HttpResponse response(Client c, HttpRequest request, HttpResponse response) throws IOException {
                 Logger.log(Logger.LEVEL.DEBUG, TAG + " | <- " +
                         response.getResponseCode() + " " + request.getUrl());
 
-                // Hook native form submissions to capture POST bodies
                 if (response.isHtml()) {
                     response.getPageContent().body().append(
                             "<script>(function(){function ser(f){var d={action:f.action,method:f.method};" +
@@ -188,7 +209,44 @@ public class RzdFree extends Provider {
             }
         });
 
-        return client;
+        ResearchActivity.pending_client = activity_client;
+        ResearchActivity.pending_url = redirect;
+        ResearchActivity.setState(ResearchActivity.STATE_RUNNING);
+
+        context.startActivity(new Intent(context, ResearchActivity.class)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+
+        Logger.log(context.getString(R.string.auth_research_manual));
+    }
+
+    /**
+     * Finds a form which posts to the given path fragment.
+     */
+    @Nullable
+    private static Element findForm(Document doc, String action_part) {
+        for (Element form : doc.getElementsByTag("form")) {
+            if (form.attr("action").contains(action_part)) {
+                return form;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Collects all named inputs of the form preserving hidden values.
+     */
+    private static HashMap<String, String> collectInputs(Element form) {
+        HashMap<String, String> fields = new HashMap<>();
+
+        for (Element input : form.getElementsByTag("input")) {
+            String name = input.attr("name");
+            if (name.isEmpty()) continue;
+
+            fields.put(name, input.attr("value"));
+        }
+
+        return fields;
     }
 
     /**

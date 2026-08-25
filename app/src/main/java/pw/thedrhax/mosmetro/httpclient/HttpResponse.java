@@ -247,7 +247,6 @@ public class HttpResponse {
         try {
             return parseAnyRedirect();
         } catch (ParseException ex) {
-            Logger.log(Logger.LEVEL.DEBUG, "No redirect found in response");
             return null;
         }
     }

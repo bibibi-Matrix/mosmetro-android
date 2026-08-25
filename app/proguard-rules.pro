@@ -28,3 +28,6 @@
 -dontwarn javax.naming.**
 -dontwarn lombok.Generated
 -dontwarn sun.net.spi.nameservice.NameServiceDescriptor
+
+# Keep provider class names readable in logs
+-keepnames class pw.thedrhax.mosmetro.authenticator.providers.**
