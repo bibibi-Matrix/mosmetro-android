@@ -174,8 +174,10 @@ public class Gen204 {
                 }
 
                 // Reliable endpoint confirmed the Internet connection,
-                // so the failing endpoint is blocked by the network itself
-                blacklist(res.getFalseNegative());
+                // so the failing endpoint is blocked by the network itself.
+                // Force-blacklist even portal redirects because the
+                // unreliable HTTP endpoint is clearly being intercepted.
+                blacklist(res.getFalseNegative(), true);
             }
 
             return res; // positive with possible false negative
@@ -275,7 +277,7 @@ public class Gen204 {
         }
 
         // All other endpoints work: only endpoint-specific blocks
-        blacklist(false_negative);
+        blacklist(false_negative, false);
         return false;
     }
 
@@ -290,17 +292,20 @@ public class Gen204 {
 
     /**
      * Adds the endpoint to the blacklist until the end of the session.
-     * Captive portal redirects are never blacklisted.
+     * Captive portal redirects are skipped unless force is true (i.e.
+     * when reliable HTTPS confirmed that Internet actually works).
      */
-    private void blacklist(@Nullable HttpResponse response) {
+    private void blacklist(@Nullable HttpResponse response, boolean force) {
         if (response == null) return;
 
         String url = response.getRequest().getUrl();
 
-        String location = response.headers.getFirst(Headers.LOCATION);
-        if (location != null && isPortalUrl(location)) {
-            Logger.log(this, "Not blacklisting captive redirect: " + url);
-            return;
+        if (!force) {
+            String location = response.headers.getFirst(Headers.LOCATION);
+            if (location != null && isPortalUrl(location)) {
+                Logger.log(this, "Not blacklisting captive redirect: " + url);
+                return;
+            }
         }
 
         blocked_hosts.add(url);
