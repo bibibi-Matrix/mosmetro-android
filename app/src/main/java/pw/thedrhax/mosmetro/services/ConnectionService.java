@@ -56,7 +56,6 @@ import pw.thedrhax.util.Notify;
 import pw.thedrhax.util.Randomizer;
 import pw.thedrhax.util.Util;
 import pw.thedrhax.util.Version;
-import pw.thedrhax.util.VpnUtils;
 import pw.thedrhax.util.WifiUtils;
 
 public class ConnectionService extends IntentService {
@@ -92,12 +91,6 @@ public class ConnectionService extends IntentService {
         }
     };
 
-    // VPN handling modes
-    private static final int VPN_MODE_NONE = 0;   // VPN was not touched
-    private static final int VPN_MODE_ROOT = 1;   // disabled via root, must be launched back
-    private static final int VPN_MODE_MANUAL = 2; // disabled manually by user
-    private int vpn_mode = VPN_MODE_NONE;
-
     // Watchdog for waitForIP() when the user-defined timeout is disabled
     private static final int IP_WAIT_WATCHDOG = 15 * 60; // seconds
 
@@ -108,7 +101,6 @@ public class ConnectionService extends IntentService {
     // Preferences
     private WifiUtils wifi;
     private CaptivePortalFix cpf;
-    private VpnUtils vpn;
     private SharedPreferences settings;
     private int pref_retry_count;
     private int pref_ip_wait;
@@ -137,7 +129,6 @@ public class ConnectionService extends IntentService {
             }
         };
         cpf = new CaptivePortalFix(this);
-        vpn = new VpnUtils(this);
         settings = PreferenceManager.getDefaultSharedPreferences(this);
         pref_retry_count = Util.getIntPreference(this, "pref_retry_count", 3);
         pref_ip_wait = Util.getIntPreference(this, "pref_ip_wait", 0);
@@ -341,85 +332,6 @@ public class ConnectionService extends IntentService {
         }
 
         return wifi.isDefaultNetworkWifi();
-    }
-
-    /**
-     * Disables VPN before authorization.
-     * Root mode: force-stops the configured VPN app and waits until the
-     * VPN network disappears. Manual mode: asks user to disable the VPN
-     * and waits up to one minute.
-     * @return True if VPN is disabled or was not connected at all.
-     */
-    private boolean handleVpnBeforeAuth() {
-        if (!wifi.isVpnConnected()) return true;
-
-        Logger.log(Logger.LEVEL.DEBUG, "VPN | Detected");
-
-        String pkg = vpn.getPackage();
-
-        // Root mode: disable automatically
-        if (!pkg.isEmpty() && vpn.isRootAvailable()) {
-            Logger.log(Logger.LEVEL.DEBUG, "VPN | Disabling " + pkg + " via root...");
-
-            if (vpn.disableByRoot(pkg)) {
-                for (int i = 0; i < 5 && wifi.isVpnConnected(); i++) {
-                    if (!running.sleep(1000)) return false;
-                }
-
-                if (!wifi.isVpnConnected()) {
-                    Logger.log(this, "VPN | Disabled successfully");
-                    vpn_mode = VPN_MODE_ROOT;
-                    return true;
-                }
-            }
-
-            Logger.log(Logger.LEVEL.DEBUG,
-                    "VPN | Unable to disable via root, waiting for manual action");
-        } else {
-            Logger.log(Logger.LEVEL.DEBUG,
-                    pkg.isEmpty() ? "VPN | No package configured, waiting for manual disabling"
-                                  : "VPN | No root access, waiting for manual disabling");
-        }
-
-        // Manual mode: ask user to disable the VPN
-        notify.title(getString(R.string.vpn_wait_title))
-                .text(getString(R.string.vpn_wait_disable))
-                .progress(0, true)
-                .show();
-
-        for (int i = 0; i < 60; i++) {
-            if (!running.sleep(1000)) return false;
-
-            if (!wifi.isVpnConnected()) {
-                Logger.log(this, "VPN | Disabled manually");
-                vpn_mode = VPN_MODE_MANUAL;
-                return true;
-            }
-        }
-
-        Logger.log(this, "Stopping by VPN");
-        return false;
-    }
-
-    /**
-     * Brings VPN back after the authorization attempt:
-     * launches the configured app in root mode or reminds user
-     * about manually disabled VPN on success.
-     */
-    private void restoreVpn(Provider.RESULT result) {
-        if (vpn_mode == VPN_MODE_NONE) return;
-
-        String pkg = vpn.getPackage();
-
-        if (vpn_mode == VPN_MODE_ROOT && !pkg.isEmpty()) {
-            Logger.log(Logger.LEVEL.DEBUG, "VPN | Enabling " + pkg + " back...");
-            vpn.enableByRoot(pkg);
-        } else if (result == Provider.RESULT.CONNECTED ||
-                   result == Provider.RESULT.ALREADY_CONNECTED) {
-            Logger.log(getString(R.string.vpn_reenable_reminder));
-        }
-
-        vpn_mode = VPN_MODE_NONE;
     }
 
     private Provider.RESULT connect(Provider provider) {
@@ -837,9 +749,6 @@ public class ConnectionService extends IntentService {
         Logger.log(getString(R.string.algorithm_name, provider.getName()));
         Provider.RESULT result = connect(provider);
         last_result = result;
-
-        // Bring VPN back after authorization attempt
-        restoreVpn(result);
 
         // Notify user if not interrupted
         if (running.get()) {
