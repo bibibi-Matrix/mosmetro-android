@@ -7,13 +7,13 @@
     "experimental": {
       "name": "experimental",
       "description": "Экспериментальная ветка: новые функции и исправления перед попаданием в master",
-      "version": 100015,
-      "build": 15,
+      "version": 100016,
+      "build": 16,
       "by_build": false,
-      "url": "https://github.com/bibibi-Matrix/mosmetro-android/releases/download/experimental/MosMetro-experimental-b15.apk",
-      "filename": "MosMetro-experimental-b15.apk",
+      "url": "https://github.com/bibibi-Matrix/mosmetro-android/releases/download/experimental/MosMetro-experimental-b16.apk",
+      "filename": "MosMetro-experimental-b16.apk",
       "stable": false,
-      "message": "Обновление v100015\n\n* Автоматическая сборка GitHub Actions (experimental-#15)"
+      "message": "Обновление v100016\n\n* Автоматическая сборка GitHub Actions (experimental-#16)"
     }
   }
 }
