@@ -175,14 +175,19 @@ public abstract class Provider extends LinkedList<Task> implements Task {
 
     /**
      * Check if a particular SSID is supported.
+     * Comparison is case-insensitive: some networks broadcast SSIDs
+     * with mixed case (e.g. RZD_Free vs RZD_FREE).
      * @param SSID  SSID of the Wi-Fi network to be tested.
      * @return  True if network is supported; otherwise, false.
      */
     public static boolean isSSIDSupported(String SSID) {
+        if (SSID == null) return false;
+
         for (String a : SSIDs) {
-            if (a.equals(SSID))
+            if (a.equalsIgnoreCase(SSID))
                 return true;
         }
+
         // TODO: Issue #70
         return false;
     }
