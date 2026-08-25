@@ -46,7 +46,7 @@ public final class Version {
         if (getBranch().equals("play")) {
             return getVersionName();
         } else {
-            return String.format(Locale.ENGLISH,"%s #%d", getBranch(), getBuildNumber());
+            return String.format(Locale.ENGLISH,"%s. %s #%d", getVersionName(), getBranch(), getBuildNumber());
         }
     }
 
