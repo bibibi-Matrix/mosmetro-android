@@ -98,7 +98,7 @@ public class WifiUtils {
 
     @RequiresApi(21)
     public LinkProperties getLinkProperies() {
-        Network network = getNetwork(ConnectivityManager.TYPE_WIFI);
+        Network network = getWifiNetwork();
         if (network == null) return null;
         return cm.getLinkProperties(network);
     }
@@ -177,19 +177,27 @@ public class WifiUtils {
     }
 
     /**
-     * Check whether the network currently used by this process is Wi-Fi
-     * rather than cellular. When the process is bound to Wi-Fi
-     * (see bindToWifi()), the bound network is returned here,
-     * so VPN networks are classified by their underlying transport.
+     * Check whether the process can currently route traffic via Wi-Fi:
+     * either the active (possibly bound) network is Wi-Fi, or any
+     * Wi-Fi-transport network exists to bind to.
      */
     public boolean isDefaultNetworkWifi() {
         Network network = cm.getActiveNetwork();
-        if (network == null) return false;
 
-        NetworkCapabilities caps = cm.getNetworkCapabilities(network);
-        return caps != null &&
-                caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
-                !caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
+        if (network != null) {
+            NetworkCapabilities caps = cm.getNetworkCapabilities(network);
+
+            if (caps != null &&
+                    caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
+                    !caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                return true;
+            }
+        }
+
+        // A captive portal network is never validated by the system,
+        // so the default may stay on Mobile: look for the Wi-Fi
+        // network itself instead of relying on the routing table
+        return getWifiNetwork() != null;
     }
 
     /*
@@ -210,19 +218,46 @@ public class WifiUtils {
 
     // Bind current process to Wi-Fi
     // Refactored answer from Stack Overflow: http://stackoverflow.com/a/28664841
+    /**
+     * Finds any network with Wi-Fi transport, including portals which
+     * are not validated by the system yet.
+     */
+    @Nullable
+    public Network getWifiNetwork() {
+        for (Network network : cm.getAllNetworks()) {
+            NetworkCapabilities caps = cm.getNetworkCapabilities(network);
+
+            if (caps != null &&
+                    caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
+                    !caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                return network;
+            }
+        }
+
+        return null;
+    }
+
     public void bindToWifi() {
         if (!settings.getBoolean("pref_wifi_bind", true)) return;
 
-        if (Build.VERSION.SDK_INT < 21)
+        if (Build.VERSION.SDK_INT < 21) {
             cm.setNetworkPreference(ConnectivityManager.TYPE_WIFI);
-        else
-            bindToNetwork(getNetwork(ConnectivityManager.TYPE_WIFI));
+            return;
+        }
+
+        Network network = getWifiNetwork();
+
+        // Do not reset the binding to the default network when there is
+        // nothing to bind to yet (the Wi-Fi network has not appeared)
+        if (network == null) return;
+
+        bindToNetwork(network);
     }
 
     // Report connectivity status to system
     @RequiresApi(21)
     public void report(boolean status) {
-        Network network = getNetwork(ConnectivityManager.TYPE_WIFI);
+        Network network = getWifiNetwork();
         if (network == null) return;
 
         if (Build.VERSION.SDK_INT >= 23)

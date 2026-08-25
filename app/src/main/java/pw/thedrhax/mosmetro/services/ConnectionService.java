@@ -328,12 +328,14 @@ public class ConnectionService extends IntentService {
     }
 
     /**
-     * Waits until the default network becomes Wi-Fi.
-     * Right after connecting to a Wi-Fi network the system may still
-     * route traffic through the mobile network for a few seconds.
+     * Waits until traffic can be routed via Wi-Fi, binding the process
+     * to the Wi-Fi network as soon as it appears (it may not be listed
+     * right after ASSOCIATING).
      */
     private boolean waitForWiFi() {
         for (int i = 0; i < 10; i++) {
+            wifi.bindToWifi();
+
             if (wifi.isDefaultNetworkWifi()) return true;
             if (!running.sleep(1000)) break;
         }
