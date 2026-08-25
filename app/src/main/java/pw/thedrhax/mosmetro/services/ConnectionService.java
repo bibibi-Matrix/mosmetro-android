@@ -716,6 +716,11 @@ public class ConnectionService extends IntentService {
             return;
         }
 
+        // Bind the process to Wi-Fi before everything else: when both
+        // mobile and Wi-Fi are available, the system default may stay
+        // on Mobile and the captive portal would never be detected
+        wifi.bindToWifi();
+
         // Authorization is allowed only via Wi-Fi networks
         if (!waitForWiFi()) {
             Logger.log(this, "Stopping by network type (not Wi-Fi)");
