@@ -13,7 +13,7 @@
       "url": "https://github.com/bibibi-Matrix/mosmetro-android/releases/download/experimental/MosMetro-experimental-b29.apk",
       "filename": "MosMetro-experimental-b29.apk",
       "stable": false,
-      "message": "Обновление v100029\n\n* Автоматическая сборка GitHub Actions (experimental-#29)"
+      "message": "Обновление v100029\n\n* Исправлен переход на WiFi после авторизации (MT_FREE)\n* Возвращена DNS-проверка вместо жёсткого пропуска неизвестных SSID"
     }
   }
 }
