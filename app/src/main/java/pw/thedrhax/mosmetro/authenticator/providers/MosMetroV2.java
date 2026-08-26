@@ -35,6 +35,7 @@ import java.util.HashMap;
 import pw.thedrhax.mosmetro.R;
 import pw.thedrhax.mosmetro.authenticator.FinalConnectionCheckTask;
 import pw.thedrhax.mosmetro.authenticator.FollowRedirectsTask;
+import pw.thedrhax.mosmetro.authenticator.Gen204.Gen204Result;
 import pw.thedrhax.mosmetro.authenticator.InitialConnectionCheckTask;
 import pw.thedrhax.mosmetro.authenticator.InterceptorTask;
 import pw.thedrhax.mosmetro.authenticator.NamedTask;
@@ -393,10 +394,14 @@ public class MosMetroV2 extends Provider {
         add(vars -> {
             if (!vars.containsKey("post_auth_redirect")) return true;
 
-            if (gen_204.check(true).isConnected()) {
+            Gen204Result result = gen_204.check(true);
+            if (result.isConnected() && !result.isFalseNegative()) {
                 Logger.log(Logger.LEVEL.DEBUG,
                         "Internet works, skipping post-auth redirects");
                 vars.put("post_auth_redirect", null);
+            } else {
+                Logger.log(Logger.LEVEL.DEBUG,
+                        "Post-auth redirect needed: HTTP still intercepted");
             }
 
             return true;

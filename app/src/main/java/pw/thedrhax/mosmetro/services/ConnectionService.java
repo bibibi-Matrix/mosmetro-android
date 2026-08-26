@@ -508,7 +508,10 @@ public class ConnectionService extends IntentService {
         } else if (!res_204.isFalseNegative()) {
             Logger.log(this, "Midsession | Solved successfully");
             midsession_solved = true;
-            if (Build.VERSION.SDK_INT >= 21) wifi.report(true);
+            if (Build.VERSION.SDK_INT >= 21) {
+                wifi.bindToWifi();
+                wifi.report(true);
+            }
             ignore_midsession = false;
             return true;
         } else {
@@ -746,12 +749,15 @@ public class ConnectionService extends IntentService {
         // periodically and may override our initial report because
         // HTTP endpoints still return 302 from the portal.
         // Report again after a short delay and then periodically.
+        // Also rebind to Wi-Fi: some OEMs reset the binding after
+        // the captive portal detection cycle.
         if (Build.VERSION.SDK_INT >= 21) {
             new Thread(() -> {
-                for (int i = 0; i < 10 && running.get(); i++) {
-                    if (!running.sleep(3000)) return;
+                for (int i = 0; i < 15 && running.get(); i++) {
+                    if (!running.sleep(2000)) return;
                     if (wifi.getWifiNetwork() != null) {
                         Logger.log(Logger.LEVEL.DEBUG, "WiFi | Re-reporting as validated");
+                        wifi.bindToWifi();
                         wifi.report(true);
                     }
                 }
@@ -769,7 +775,7 @@ public class ConnectionService extends IntentService {
             boolean activeIsWifi = wifi.isActiveNetworkWifi();
             if (!activeIsWifi && wifi.getWifiNetwork() != null) {
                 not_wifi_count++;
-                if (not_wifi_count >= 15) {
+                if (not_wifi_count >= 30) {
                     Logger.log(this, "Default network is not Wi-Fi anymore");
                     break;
                 }
@@ -777,6 +783,17 @@ public class ConnectionService extends IntentService {
                     Logger.log(Logger.LEVEL.DEBUG,
                             "WiFi | Not default for " + not_wifi_count + "s, re-reporting");
                     wifi.report(true);
+                    wifi.bindToWifi();
+                }
+                // After a short grace period, check for midsession even
+                // when WiFi is not the default: the captive portal may
+                // have already been solved but the system has not
+                // re-evaluated the network yet.
+                if (not_wifi_count == 10 && pref_internet_check) {
+                    if (!isConnected(gen_204)) {
+                        Logger.log(Logger.LEVEL.DEBUG,
+                                "WiFi | Not default: midsession check failed");
+                    }
                 }
                 continue;
             }
