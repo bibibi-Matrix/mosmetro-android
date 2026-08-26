@@ -69,7 +69,9 @@ public class RzdFree extends Provider {
         super(context);
 
         /**
-         * Checking Internet connection and capturing the initial redirect.
+         * Checking Internet connection
+         * ⇒ GET generate_204 < res
+         * ⇐ Meta-redirect: https://wifilogin.ttk.ru/cp/isg > redirect
          */
         add(new InitialConnectionCheckTask(this, res) {
             @Override
@@ -80,44 +82,82 @@ public class RzdFree extends Provider {
                     redirect = PORTAL;
                 }
 
+                Logger.log(Logger.LEVEL.DEBUG, TAG + " | Redirect: " + redirect);
+
                 return true;
             }
         });
 
         /**
-         * Authorization: known devices are logged in by replaying the
-         * auto-submitting /cp/login form over plain HTTP; first-time
-         * devices fall back to the embedded window with the SMS form.
+         * Fetching the portal page
+         * ⇒ GET https://wifilogin.ttk.ru/cp/isg < redirect
+         * ⇐ HTML with form (auto-login or SMS)
          */
-        add(new NamedTask(context.getString(R.string.auth_auth_form)) {
+        add(new NamedTask(context.getString(R.string.auth_auth_page)) {
             @Override
             public boolean run(HashMap<String, Object> vars) {
                 try {
                     HttpResponse page = client.get(redirect).execute();
+                    Logger.log(Logger.LEVEL.DEBUG, TAG + " | Portal page: " + page.getResponseCode());
+
                     Document doc = page.getPageContent();
 
                     Element login_form = findForm(doc, "/cp/login");
 
                     if (login_form != null) {
-                        Map<String, String> fields = collectInputs(login_form);
-
-                        String action = login_form.absUrl("action");
-                        if (action.isEmpty()) action = redirect;
-
-                        HttpResponse result = client.post(action, fields).execute();
-                        Logger.log(Logger.LEVEL.DEBUG,
-                                TAG + " | Login form result: " + result.getResponseCode());
-
-                        Gen204.Gen204Result check = gen_204.check(true);
-
-                        if (check.isConnected() && !check.isFalseNegative()) {
-                            vars.put("result", RESULT.CONNECTED);
-                            return false;
-                        }
+                        Logger.log(Logger.LEVEL.DEBUG, TAG + " | Auto-login form found");
+                        vars.put("login_form", login_form);
+                        vars.put("login_action", login_form.absUrl("action").isEmpty()
+                                ? redirect : login_form.absUrl("action"));
+                    } else {
+                        Logger.log(Logger.LEVEL.DEBUG, TAG + " | No auto-login form (first-time device)");
                     }
 
-                    // No auto-login form: first-time device, show the
-                    // SMS/registration page in the embedded window
+                    return true;
+                } catch (IOException ex) {
+                    Logger.log(Logger.LEVEL.DEBUG, ex);
+                    Logger.log(context.getString(R.string.error,
+                            context.getString(R.string.auth_error_auth_page)
+                    ));
+                    return false;
+                }
+            }
+        });
+
+        /**
+         * Submitting the auto-login form (if present)
+         * ⇒ POST action < form fields
+         * ⇐ 200 OK → check internet
+         */
+        add(new NamedTask(context.getString(R.string.auth_auth_form)) {
+            @Override
+            public boolean run(HashMap<String, Object> vars) {
+                Element login_form = (Element) vars.get("login_form");
+
+                if (login_form == null) {
+                    Logger.log(Logger.LEVEL.DEBUG, TAG + " | Skipping form submit (no form)");
+                    openWindow(vars);
+                    return true;
+                }
+
+                try {
+                    Map<String, String> fields = collectInputs(login_form);
+                    String action = (String) vars.get("login_action");
+
+                    Logger.log(Logger.LEVEL.DEBUG, TAG + " | POST " + action);
+                    HttpResponse result = client.post(action, fields).execute();
+                    Logger.log(Logger.LEVEL.DEBUG,
+                            TAG + " | Login form result: " + result.getResponseCode());
+
+                    Gen204.Gen204Result check = gen_204.check(true);
+
+                    if (check.isConnected() && !check.isFalseNegative()) {
+                        Logger.log(Logger.LEVEL.DEBUG, TAG + " | Auto-login succeeded");
+                        vars.put("result", RESULT.CONNECTED);
+                        return false;
+                    }
+
+                    Logger.log(Logger.LEVEL.DEBUG, TAG + " | Auto-login did not open internet");
                 } catch (IOException ex) {
                     Logger.log(Logger.LEVEL.DEBUG, ex);
                 }
@@ -134,8 +174,6 @@ public class RzdFree extends Provider {
             @Override
             public boolean until(HashMap<String, Object> vars) {
                 if (PortalActivity.state == PortalActivity.STATE_CANCELLED) {
-                    // User might close the window after the portal has
-                    // already passed: verify before reporting cancellation
                     Gen204.Gen204Result res = gen_204.check(true);
 
                     if (res.isConnected() && !res.isFalseNegative()) {
