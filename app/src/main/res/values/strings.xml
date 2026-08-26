@@ -143,6 +143,9 @@
     <string name="auth_error_bmstu_credentials">
         Login and password are required to connect to this network. Please check \"bmstu_lb (lbpfs.bmstu.ru)\" in \"Connection settings\" menu.
     </string>
+    <string name="auth_error_byfly_credentials">
+        Login and password are required to connect to this network. Please check \"ByFly (Beltelecom)\" in \"Connection settings\" menu.
+    </string>
     <string name="auth_error_form">auth form not found</string>
     <string name="auth_error_server">server does not respond or responds with error</string>
     <string name="auth_error_provider">unable to identify the provider</string>
@@ -283,4 +286,6 @@
     <string name="share">Share</string>
     <string name="share_log_debug">Detailed log (last 2000 lines)</string>
     <string name="share_log_info">Short log (last 100 lines)</string>
+    <string name="pref_byfly">ByFly (Beltelecom)</string>
+    <string name="pref_byfly_summary">This algorithm is required to connect to \"BELTELECOM\" and \"byfly WIFI\" — paid Wi-Fi networks in Belarus.</string>
 </resources>

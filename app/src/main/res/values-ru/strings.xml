@@ -135,6 +135,9 @@
     <string name="auth_error_bmstu_credentials">
         Для подключения к этой сети необходимо указать логин и пароль. Пожалуйста проверьте \"bmstu_lb (lbpfs.bmstu.ru)\" в меню \"Настройки подключения\".
     </string>
+    <string name="auth_error_byfly_credentials">
+        Для подключения к этой сети необходимо указать логин и пароль. Пожалуйста проверьте \"ByFly (Белтелеком)\" в меню \"Настройки подключения\".
+    </string>
     <string name="auth_error_form">форма не найдена</string>
     <string name="auth_error_server">сервер не ответил или вернул ошибку</string>
     <string name="auth_error_provider">провайдер не опознан</string>
@@ -261,4 +264,6 @@
     <string name="share">Поделиться</string>
     <string name="share_log_debug">Подробный лог (последние 2000 строк)</string>
     <string name="share_log_info">Краткий лог (последние 100 строк)</string>
+    <string name="pref_byfly">ByFly (Белтелеком)</string>
+    <string name="pref_byfly_summary">Этот алгоритм используется для подключения к \"BELTELECOM\" и \"byfly WIFI\" — платным сетям Wi-Fi в Беларуси.</string>
 </resources>

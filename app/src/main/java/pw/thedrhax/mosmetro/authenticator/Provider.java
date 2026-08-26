@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import pw.thedrhax.mosmetro.R;
+import pw.thedrhax.mosmetro.authenticator.providers.ByFly;
 import pw.thedrhax.mosmetro.authenticator.providers.MAInet;
 import pw.thedrhax.mosmetro.authenticator.providers.Bmstu;
 import pw.thedrhax.mosmetro.authenticator.providers.MosMetroV1;
@@ -70,7 +71,9 @@ public abstract class Provider extends LinkedList<Task> implements Task {
             "Moscow_WiFi_Free",
             "Moscow_WIFI_Free",
             "bmstu_lb",
-            "RZD_FREE"
+            "RZD_FREE",
+            "BELTELECOM", "BELTELECOM WIFI",
+            "byfly WIFI"
     };
 
     protected Context context;
@@ -157,6 +160,7 @@ public abstract class Provider extends LinkedList<Task> implements Task {
         else if (MosMetroV1.match(response)) return new MosMetroV1(context, response);
         else if (MAInet.match(response)) return new MAInet(context, response);
         else if (Bmstu.match(response)) return new Bmstu(context, response);
+        else if (ByFly.match(response)) return new ByFly(context, response);
         else return new Unknown(context, response);
     }
 

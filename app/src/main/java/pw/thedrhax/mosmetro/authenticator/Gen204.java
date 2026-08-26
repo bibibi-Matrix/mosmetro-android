@@ -287,7 +287,8 @@ public class Gen204 {
     private static boolean isPortalUrl(String url) {
         return url.contains("wi-fi.ru") ||
                url.contains("ttk.ru") ||
-               url.contains("lbpfs.bmstu.ru");
+               url.contains("lbpfs.bmstu.ru") ||
+               url.contains("ciscowifi.beltelecom.by");
     }
 
     /**
