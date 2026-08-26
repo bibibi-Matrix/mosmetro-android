@@ -200,6 +200,22 @@ public class WifiUtils {
         return getWifiNetwork() != null;
     }
 
+    /**
+     * Check whether the ACTIVE (system-default) network is Wi-Fi,
+     * with no fallback. Used in the monitoring loop to detect the
+     * case where Wi-Fi exists but the system keeps routing via Mobile.
+     */
+    public boolean isActiveNetworkWifi() {
+        Network network = cm.getActiveNetwork();
+        if (network == null) return false;
+
+        NetworkCapabilities caps = cm.getNetworkCapabilities(network);
+        if (caps == null) return false;
+
+        return caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
+                !caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
+    }
+
     /*
      * Control methods
      */

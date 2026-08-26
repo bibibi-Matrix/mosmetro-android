@@ -660,13 +660,6 @@ public class ConnectionService extends IntentService {
             return;
         }
 
-        // Unknown SSID: skip internet check and provider detection
-        if (unknownNetwork && !pref_research) {
-            Logger.log(this, "Not checking: SSID is not supported (" + SSID + ")");
-            running.set(false);
-            return;
-        }
-
         Gen204 gen_204 = new Gen204(this, running);
 
         // Check if already connected
@@ -677,6 +670,16 @@ public class ConnectionService extends IntentService {
             notify(Provider.RESULT.ALREADY_CONNECTED);
             running.set(false);
             return;
+        }
+
+        // DNS probe for unknown networks: skip if no supported portal
+        // responds. Research mode bypasses this check.
+        if (unknownNetwork && !pref_research) {
+            if (!Provider.dnsCheck(this)) {
+                Logger.log(this, "Stopping by dns probe (unknown network)");
+                running.set(false);
+                return;
+            }
         }
 
         notify.title(getString(R.string.auth_connecting, SSID))
@@ -739,16 +742,51 @@ public class ConnectionService extends IntentService {
                 .putExtra("PROVIDER", provider.getName())
         );
 
+        // Keep reporting WiFi as validated: the system re-validates
+        // periodically and may override our initial report because
+        // HTTP endpoints still return 302 from the portal.
+        // Report again after a short delay and then periodically.
+        if (Build.VERSION.SDK_INT >= 21) {
+            new Thread(() -> {
+                for (int i = 0; i < 10 && running.get(); i++) {
+                    if (!running.sleep(3000)) return;
+                    if (wifi.getWifiNetwork() != null) {
+                        Logger.log(Logger.LEVEL.DEBUG, "WiFi | Re-reporting as validated");
+                        wifi.report(true);
+                    }
+                }
+            }).start();
+        }
+
         // Wait while internet connection is available
         int legacy_count = 0;
         int validated_false_count = 0;
+        int not_wifi_count = 0;
 
         while (running.sleep(1000)) {
-            // Stop monitoring when the default network is not Wi-Fi anymore
-            if (!wifi.isDefaultNetworkWifi()) {
+            // When WiFi exists but is not the default network, keep
+            // trying to make it the default instead of giving up.
+            boolean activeIsWifi = wifi.isActiveNetworkWifi();
+            if (!activeIsWifi && wifi.getWifiNetwork() != null) {
+                not_wifi_count++;
+                if (not_wifi_count >= 15) {
+                    Logger.log(this, "Default network is not Wi-Fi anymore");
+                    break;
+                }
+                if (not_wifi_count % 5 == 0) {
+                    Logger.log(Logger.LEVEL.DEBUG,
+                            "WiFi | Not default for " + not_wifi_count + "s, re-reporting");
+                    wifi.report(true);
+                }
+                continue;
+            }
+
+            if (!activeIsWifi && wifi.getWifiNetwork() == null) {
                 Logger.log(this, "Default network is not Wi-Fi anymore");
                 break;
             }
+
+            not_wifi_count = 0;
 
             if (pref_internet_check) {
                 if (Build.VERSION.SDK_INT >= 24) {
