@@ -145,11 +145,12 @@ public class BackendRequest {
     public DocumentContext getData(boolean force) {
         DocumentContext res = Util.JSONPATH_EMPTY;
 
-        if (!force) {
-            res = getCachedData(false);
+        // Always try to return cached data first when available
+        DocumentContext cached = getCachedData(false);
 
-            if (res != Util.JSONPATH_EMPTY) {
-                return res;
+        if (!force) {
+            if (cached != Util.JSONPATH_EMPTY) {
+                return cached;
             }
         }
 
@@ -162,6 +163,11 @@ public class BackendRequest {
                     .putLong("worker_timestamp", System.currentTimeMillis())
                     .putString("worker_cache_data", res.jsonString())
                     .apply();
+        }
+
+        // Fall back to cached data when network is unavailable
+        if (res == Util.JSONPATH_EMPTY && cached != Util.JSONPATH_EMPTY) {
+            return cached;
         }
 
         return res;
