@@ -13,7 +13,7 @@
       "url": "https://github.com/bibibi-Matrix/mosmetro-android/releases/download/experimental/MosMetro-experimental-b30.apk",
       "filename": "MosMetro-experimental-b30.apk",
       "stable": false,
-      "message": "Обновление v100030\n\n* Поиск обновлений: кэш используется при недоступности сети\n* Исправлен переход на WiFi после авторизации (MT_FREE)\n* Возвращена DNS-проверка вместо жёсткого пропуска неизвестных SSID"
+      "message": "Обновление v100030\n\n* Автоматическая сборка GitHub Actions (experimental-#30)"
     }
   }
 }
