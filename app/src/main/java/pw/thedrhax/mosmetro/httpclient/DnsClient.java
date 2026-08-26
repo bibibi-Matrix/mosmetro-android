@@ -50,6 +50,7 @@ public class DnsClient implements Dns {
     private ExtendedResolver dns;
     private boolean pref_dnsjava;
     private boolean global_cache = true;
+    private boolean bindWifi = true;
 
     private String[] getServers() {
         Set<String> servers = new HashSet<String>();
@@ -113,6 +114,11 @@ public class DnsClient implements Dns {
         return this;
     }
 
+    public DnsClient setBindWifi(boolean bind) {
+        this.bindWifi = bind;
+        return this;
+    }
+
     private static final String REGEX_OCTET = "(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9]{1,2})";
     private static final String REGEX_IPv4 = "^" + REGEX_OCTET + "(\\." + REGEX_OCTET + "){3}$";
 
@@ -147,7 +153,7 @@ public class DnsClient implements Dns {
         }
 
         req.setResolver(dns);
-        wifi.bindToWifi();
+        if (bindWifi) wifi.bindToWifi();
 
         org.xbill.DNS.Record[] res = req.run();
         List<InetAddress> result = new LinkedList<>();

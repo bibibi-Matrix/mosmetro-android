@@ -71,11 +71,13 @@ import pw.thedrhax.util.WifiUtils;
 public class OkHttp extends Client {
     private OkHttpClient client;
     private WifiUtils wifi;
+    private DnsClient dnsClient;
     private Call last_call = null;
     private boolean bindWifi = true;
 
     public Client setBindWifi(boolean bind) {
         this.bindWifi = bind;
+        dnsClient.setBindWifi(bind);
         return this;
     }
 
@@ -131,9 +133,10 @@ public class OkHttp extends Client {
     public OkHttp(Context context) {
         super(context);
         wifi = new WifiUtils(context);
+        dnsClient = new DnsClient(context);
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
-                .dns(new DnsClient(context))
+                .dns(dnsClient)
                 .followRedirects(false)
                 .followSslRedirects(false)
                 .protocols(Collections.singletonList(Protocol.HTTP_1_1))
