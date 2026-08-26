@@ -126,7 +126,8 @@ public class BackendRequest {
                 .cancelOnClick(true)
                 .onClick(PendingIntent.getActivity(
                         context, 252,
-                        new Intent(context, SettingsActivity.class),
+                        new Intent(context, SettingsActivity.class)
+                                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP),
                         PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
 
         notify.show();

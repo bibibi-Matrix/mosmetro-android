@@ -145,6 +145,17 @@ public class DebugActivity extends Activity {
         );
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+
+        // Re-sync service state when re-launched from notification
+        service_state.onReceive(this,
+                new Intent().putExtra(ConnectionService.EXTRA_RUNNING, ConnectionService.isRunning())
+        );
+    }
+
     // ActionBar Menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

@@ -53,7 +53,8 @@ public class ReceiverService extends Service {
                 .icon(R.drawable.ic_notification_success_colored, R.drawable.ic_notification_success)
                 .onClick(PendingIntent.getActivity(
                         this, 2,
-                        new Intent(this, SettingsActivity.class),
+                        new Intent(this, SettingsActivity.class)
+                                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP),
                         PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
                 ))
                 .id(NOTIFY_ID)
@@ -64,11 +65,9 @@ public class ReceiverService extends Service {
         connection_receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if (intent.getBooleanExtra(ConnectionService.EXTRA_RUNNING, false)) {
-                    notify.hide();
-                } else {
-                    notify.show();
-                }
+                // Just update the notification content; avoid hide()/show()
+                // which tears down the foreground notification and recreates it.
+                notify.show();
             }
         };
 
@@ -116,10 +115,6 @@ public class ReceiverService extends Service {
         if (!location_granted) {
             stopSelf();
             return super.onStartCommand(intent, flags, startId);
-        }
-
-        if (ConnectionService.isRunning()) {
-            notify.hide();
         }
 
         return super.onStartCommand(intent, flags, startId);
