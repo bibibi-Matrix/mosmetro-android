@@ -20,6 +20,7 @@ package pw.thedrhax.mosmetro.authenticator.providers;
 
 import android.content.Context;
 import android.content.Intent;
+import android.app.PendingIntent;
 import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
@@ -42,6 +43,7 @@ import pw.thedrhax.mosmetro.httpclient.HttpRequest;
 import pw.thedrhax.mosmetro.httpclient.HttpResponse;
 import pw.thedrhax.mosmetro.httpclient.clients.OkHttp;
 import pw.thedrhax.util.Logger;
+import pw.thedrhax.util.Notify;
 
 /**
  * The ResearchWV class implements the authorization research mode:
@@ -145,8 +147,29 @@ public class ResearchWV extends Provider {
                 ResearchActivity.pending_url = redirect;
                 ResearchActivity.setState(ResearchActivity.STATE_RUNNING);
 
-                context.startActivity(new Intent(context, ResearchActivity.class)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                // Launch the portal window through a notification with a
+                // full-screen intent. A direct startActivity() from a
+                // background service is silently blocked by Android 10+
+                // Background Activity Launch restrictions, so the window
+                // would never appear. A full-screen intent auto-launches
+                // the activity when the device is locked or the app is in
+                // the foreground, and shows a tappable notification otherwise.
+                PendingIntent activityIntent = PendingIntent.getActivity(
+                        context, 0,
+                        new Intent(context, ResearchActivity.class)
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                );
+
+                new Notify(context)
+                        .channel(Notify.CHANNEL_ID_RESEARCH)
+                        .title(context.getString(R.string.pref_debug_research))
+                        .text(context.getString(R.string.auth_research_manual))
+                        .priority(2)
+                        .onClick(activityIntent)
+                        .fullScreenIntent(activityIntent, true)
+                        .id(3)
+                        .show();
 
                 Logger.log(context.getString(R.string.auth_research_manual));
                 return true;

@@ -31,6 +31,7 @@ import androidx.core.app.NotificationCompat;
 
 public class Notify extends NotificationCompat.Builder {
     public static final String CHANNEL_ID = "pw.thedrhax.mosmetro.notifications";
+    public static final String CHANNEL_ID_RESEARCH = "pw.thedrhax.mosmetro.research";
 
     private Context context;
     private NotificationManager nm;
@@ -63,6 +64,16 @@ public class Notify extends NotificationCompat.Builder {
             );
             nm.createNotificationChannel(channel);
             setChannelId(CHANNEL_ID);
+
+            // High-importance channel for research-mode portal window:
+            // full-screen intents need it to auto-launch on Android 10+.
+            NotificationChannel researchChannel = new NotificationChannel(
+                    CHANNEL_ID_RESEARCH,
+                    context.getString(pw.thedrhax.mosmetro.R.string.pref_debug_research),
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            researchChannel.setSound(null, null);
+            nm.createNotificationChannel(researchChannel);
         }
 
         // Android 12+ rejects foreground services started with a notification
@@ -93,6 +104,16 @@ public class Notify extends NotificationCompat.Builder {
 
     public Notify onDelete(PendingIntent intent) {
         setDeleteIntent(intent); return this;
+    }
+
+    public Notify fullScreenIntent(PendingIntent intent, boolean highPriority) {
+        setFullScreenIntent(intent, highPriority);
+        return this;
+    }
+
+    public Notify channel(String channelId) {
+        setChannelId(channelId);
+        return this;
     }
 
     public Notify id(int id) {

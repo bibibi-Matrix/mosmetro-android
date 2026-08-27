@@ -20,6 +20,7 @@ package pw.thedrhax.mosmetro.authenticator.providers;
 
 import android.content.Context;
 import android.content.Intent;
+import android.app.PendingIntent;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -45,6 +46,7 @@ import pw.thedrhax.mosmetro.httpclient.HttpRequest;
 import pw.thedrhax.mosmetro.httpclient.HttpResponse;
 import pw.thedrhax.mosmetro.httpclient.clients.OkHttp;
 import pw.thedrhax.util.Logger;
+import pw.thedrhax.util.Notify;
 
 /**
  * The RzdFree class handles authorization in the RZD_FREE network
@@ -236,8 +238,25 @@ public class RzdFree extends Provider {
         PortalActivity.pending_url = redirect;
         PortalActivity.setState(PortalActivity.STATE_RUNNING);
 
-        context.startActivity(new Intent(context, PortalActivity.class)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        // Launch through a notification with a full-screen intent: a direct
+        // startActivity() from a background service is silently blocked by
+        // Android 10+ Background Activity Launch restrictions.
+        PendingIntent activityIntent = PendingIntent.getActivity(
+                context, 0,
+                new Intent(context, PortalActivity.class)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        new Notify(context)
+                .channel(Notify.CHANNEL_ID_RESEARCH)
+                .title(context.getString(R.string.auth_webview_page))
+                .text(context.getString(R.string.auth_webview_page))
+                .priority(2)
+                .onClick(activityIntent)
+                .fullScreenIntent(activityIntent, true)
+                .id(4)
+                .show();
 
         Logger.log(context.getString(R.string.auth_webview_page));
     }
