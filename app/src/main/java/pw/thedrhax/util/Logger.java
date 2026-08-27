@@ -323,13 +323,18 @@ public class Logger {
     public static void share(final Context context) {
         CharSequence[] items = new CharSequence[] {
                 context.getString(R.string.share_log_debug),
-                context.getString(R.string.share_log_info)
+                context.getString(R.string.share_log_info),
+                context.getString(R.string.share_log_research)
         };
 
         new android.app.AlertDialog.Builder(context)
                 .setTitle(context.getString(R.string.share))
                 .setItems(items, (dialog, which) -> {
-                    share(context, which == 0 ? LEVEL.DEBUG : LEVEL.INFO);
+                    if (which == 2) {
+                        pw.thedrhax.mosmetro.authenticator.ResearchCapture.share(context);
+                    } else {
+                        share(context, which == 0 ? LEVEL.DEBUG : LEVEL.INFO);
+                    }
                 })
                 .show();
     }

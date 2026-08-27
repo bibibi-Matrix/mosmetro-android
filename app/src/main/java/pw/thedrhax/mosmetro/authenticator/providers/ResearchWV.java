@@ -37,6 +37,7 @@ import pw.thedrhax.mosmetro.authenticator.InitialConnectionCheckTask;
 import pw.thedrhax.mosmetro.authenticator.InterceptorTask;
 import pw.thedrhax.mosmetro.authenticator.NamedTask;
 import pw.thedrhax.mosmetro.authenticator.Provider;
+import pw.thedrhax.mosmetro.authenticator.ResearchCapture;
 import pw.thedrhax.mosmetro.authenticator.WaitTask;
 import pw.thedrhax.mosmetro.httpclient.Client;
 import pw.thedrhax.mosmetro.httpclient.HttpRequest;
@@ -62,11 +63,17 @@ import pw.thedrhax.util.Notify;
 public class ResearchWV extends Provider {
     public static final String TAG = "ResearchWV";
 
+    private final ResearchCapture capture;
+
     private final InterceptorTask request_logger = new InterceptorTask(".*") {
         @Nullable @Override
         public HttpResponse request(Client client, HttpRequest request) throws IOException {
             Logger.log(Logger.LEVEL.DEBUG,
                     TAG + " | -> " + request.getMethod() + " " + request.getUrl());
+
+            capture.logWifiState(TAG + " |   [req]");
+            capture.logRequest(TAG + " |   ", request);
+
             return null; // pass through
         }
     };
@@ -76,6 +83,8 @@ public class ResearchWV extends Provider {
         public HttpResponse response(Client client, HttpRequest request, HttpResponse response) throws IOException {
             Logger.log(Logger.LEVEL.DEBUG, TAG + " | <- " +
                     response.getResponseCode() + " " + request.getUrl());
+
+            capture.logResponse(TAG + " |   ", request, response);
             return response;
         }
     };
@@ -85,6 +94,9 @@ public class ResearchWV extends Provider {
     public ResearchWV(final Context context, final HttpResponse res) {
         super(context);
 
+        this.capture = new ResearchCapture(context);
+        capture.logWifiState(TAG + " |   [start]");
+
         /**
          * Checking Internet connection and capturing the initial redirect.
          */
@@ -92,7 +104,7 @@ public class ResearchWV extends Provider {
             @Override
             public boolean handle_response(HashMap<String, Object> vars, HttpResponse response) {
                 redirect = response.parseAnyRedirectOrNull();
-                ResearchWV.dump(TAG, response);
+                dump(TAG, response);
                 return true;
             }
         });
@@ -193,12 +205,16 @@ public class ResearchWV extends Provider {
     /**
      * Logs structured information about the portal page:
      * title, meta redirects, forms with inputs and scripts.
+     * The full details are appended to the research capture file.
      * @param tag       Prefix used to distinguish callers in the log.
      */
-    public static void dump(String tag, HttpResponse response) {
+    public void dump(String tag, HttpResponse response) {
         Logger.log(Logger.LEVEL.DEBUG, tag + " | URL: " + response.getUrl());
         Logger.log(Logger.LEVEL.DEBUG,
                 tag + " | Status: " + response.getResponseCode() + " " + response.getReason());
+
+        capture.logWifiState(tag + " |   [portal]");
+        capture.logResponse(tag + " |   ", response.getRequest(), response);
 
         if (!response.isHtml()) {
             Logger.log(Logger.LEVEL.DEBUG,
@@ -207,6 +223,7 @@ public class ResearchWV extends Provider {
         }
 
         org.jsoup.nodes.Document doc = response.getPageContent();
+        capture.logPageSummary(tag + " |   ", doc);
 
         Logger.log(Logger.LEVEL.DEBUG, tag + " | Title: " + doc.title());
 
