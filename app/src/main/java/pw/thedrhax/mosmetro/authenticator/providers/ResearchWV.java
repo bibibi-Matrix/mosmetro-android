@@ -62,15 +62,6 @@ import pw.thedrhax.util.Notify;
 public class ResearchWV extends Provider {
     public static final String TAG = "ResearchWV";
 
-    private final InterceptorTask blocker =
-            new InterceptorTask(".*(ads\\.adfox\\.ru|mc\\.yandex\\.ru|ac\\.yandex\\.ru|top-fwz1\\.mail\\.ru|doubleclick\\.net|googlesyndication\\.com|\\.mp4$).*") {
-        @NonNull @Override
-        public HttpResponse request(Client client, HttpRequest request) throws IOException {
-            Logger.log(Logger.LEVEL.DEBUG, TAG + " | Blocked: " + request.getUrl());
-            return new HttpResponse(request, "");
-        }
-    };
-
     private final InterceptorTask request_logger = new InterceptorTask(".*") {
         @Nullable @Override
         public HttpResponse request(Client client, HttpRequest request) throws IOException {
@@ -85,25 +76,6 @@ public class ResearchWV extends Provider {
         public HttpResponse response(Client client, HttpRequest request, HttpResponse response) throws IOException {
             Logger.log(Logger.LEVEL.DEBUG, TAG + " | <- " +
                     response.getResponseCode() + " " + request.getUrl());
-
-            // Hook native form submissions: WebView cannot intercept
-            // regular POST requests, so serialize forms on submit instead
-            if (response.isHtml()) {
-                response.getPageContent().body().append(
-                        "<script>(function(){try{console.log('RESEARCH|HOOK|loaded');" +
-                        "function ser(f){var d={action:f.action,method:f.method};" +
-                        "try{for(var i=0;i<f.elements.length;i++){var e=f.elements[i];" +
-                        "if(e.name)d[e.name]=e.value;}}catch(e){}return JSON.stringify(d);}" +
-                        "document.addEventListener('submit',function(ev){try{" +
-                        "console.log('RESEARCH|FORM|'+ser(ev.target));}catch(e){}},true);" +
-                        "var o=HTMLFormElement.prototype.submit;" +
-                        "if(o){HTMLFormElement.prototype.submit=function(){try{" +
-                        "console.log('RESEARCH|FORM|'+ser(this));}catch(e){}}" +
-                        "return o.apply(this,arguments);};}catch(e){" +
-                        "console.log('RESEARCH|HOOK|error: '+e);}})();</script>"
-                );
-            }
-
             return response;
         }
     };
@@ -139,7 +111,6 @@ public class ResearchWV extends Provider {
 
                 // Fresh client per session: logging interceptors live here
                 Client activity_client = new OkHttp(context);
-                activity_client.interceptors.add(blocker);
                 activity_client.interceptors.add(request_logger);
                 activity_client.interceptors.add(response_logger);
 
