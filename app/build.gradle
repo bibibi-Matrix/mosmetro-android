@@ -15,7 +15,7 @@ android {
 
         // CI builds get a monotonically growing version code (100000 + build number)
         def ci_build_number = System.getenv("BUILD_NUMBER")
-        versionCode ci_build_number != null ? 100000 + ci_build_number.toInteger() : 86
+        versionCode ci_build_number != null ? 100000 + ci_build_number.toInteger() : 87
         versionName "3.0.0"
 
         // Jenkins build info

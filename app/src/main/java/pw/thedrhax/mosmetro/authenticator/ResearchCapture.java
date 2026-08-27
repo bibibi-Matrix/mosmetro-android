@@ -146,14 +146,8 @@ public class ResearchCapture {
                ((ip >> 16) & 0xff) + "." + ((ip >> 24) & 0xff);
     }
 
-    private String macToString(@Nullable byte[] mac) {
-        if (mac == null) return "<null>";
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < mac.length; i++) {
-            if (i > 0) sb.append(':');
-            sb.append(String.format(Locale.ENGLISH, "%02X", mac[i]));
-        }
-        return sb.toString();
+    private String macToString(@Nullable String bssid) {
+        return bssid != null && !bssid.isEmpty() ? bssid.toUpperCase(Locale.ENGLISH) : "<null>";
     }
 
     /**
